@@ -2,7 +2,7 @@ import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 import { useContext, lazy } from 'react';
 import { AuthContext } from './contexts/AuthContext';
 import { Toaster } from "@/components/ui/sonner"
-import Register from './pages/Register';
+import Register from '@/pages/Register/Register';
 import Dashboard from './pages/Dashboard';
 import Sensor from './pages/Sensor';
 import Users from './pages/Users';
