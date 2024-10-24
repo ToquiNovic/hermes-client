@@ -1,18 +1,16 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { UserWithId } from "@/models";
+import { persist, StorageValue } from 'zustand/middleware';
+import { UserWithId } from '@/models';
 
-// Estado inicial del usuario
 const userEmptyState: UserWithId = {
   _id: "",
   username: "",
-  role: "student",  // Valor predeterminado
+  role: "student",
   team: "",
   isLeader: false,
-  refreshToken: "", // Aquí almacenaremos el token de acceso
+  refreshToken: "",
 };
 
-// Interfaz de la tienda de usuario
 interface UserStore {
   user: UserWithId;
   token: string | null;
@@ -22,50 +20,57 @@ interface UserStore {
   modifyUser: (partialUser: Partial<UserWithId>) => void;
   resetUser: () => void;
   logout: () => void;
-  verifyToken: () => Promise<boolean>; // Verificación del token
+  verifyToken: () => Promise<boolean>;
 }
 
-// Crear la tienda Zustand
+type PersistedValue = StorageValue<UserStore> | null;
+
+const localStorageWrapper = {
+  getItem: (name: string): PersistedValue => {
+    const item = localStorage.getItem(name);
+    return item ? JSON.parse(item) : null;
+  },
+  setItem: (name: string, value: PersistedValue) => {
+    localStorage.setItem(name, JSON.stringify(value));
+  },
+  removeItem: (name: string) => {
+    localStorage.removeItem(name);
+  },
+};
+
 export const useUserStore = create<UserStore>()(
   persist(
     (set, get) => ({
       user: userEmptyState,
-      token: null, // Para almacenar el token
+      token: null,
       isAuthenticated: false,
-      // Función para manejar login
       login: (newUser, token) => {
         set({ user: newUser, token: token, isAuthenticated: true });
       },
-      createUser: (newUser) => set({ user: newUser }), 
+      createUser: (newUser) => set({ user: newUser }),
       modifyUser: (partialUser) =>
         set((state) => ({ user: { ...state.user, ...partialUser } })),
       resetUser: () => set({ user: userEmptyState, token: null, isAuthenticated: false }),
       logout: () => set({ user: userEmptyState, token: null, isAuthenticated: false }),
-
-      // Verificación del refreshToken
       verifyToken: async () => {
         const { token, logout } = get();
-
         if (!token) {
-          logout(); // Si no hay token, cierra sesión
+          logout();
           return false;
         }
-
         try {
-          // Verificación del token (puedes ajustarlo según tu API)
           const response = await fetch('/api/verify-token', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`, // Envía el token para validación
+              Authorization: `Bearer ${token}`,
             },
           });
-
           if (response.ok) {
             set({ isAuthenticated: true });
             return true;
           } else {
-            logout(); // Si el token es inválido, cierra sesión
+            logout();
             return false;
           }
         } catch (error) {
@@ -75,6 +80,9 @@ export const useUserStore = create<UserStore>()(
         }
       },
     }),
-    { name: 'user-storage' } // Configuración de persistencia
+    {
+      name: 'user-storage',
+      storage: localStorageWrapper,
+    }
   )
 );

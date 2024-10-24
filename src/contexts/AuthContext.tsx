@@ -1,4 +1,3 @@
-// AuthContext.tsx
 import { createContext, FC, ReactNode, useEffect } from 'react';
 import { useUserStore } from '../store/states';
 import { UserWithId } from '../types/User';
@@ -6,7 +5,7 @@ import { UserWithId } from '../types/User';
 interface AuthContextType {
   isAuthenticated: boolean;
   user: UserWithId | null;
-  login: (user: UserWithId) => void;
+  login: (user: UserWithId, token: string) => void;
   logout: () => void;
   verifyToken: () => Promise<boolean>;
 }

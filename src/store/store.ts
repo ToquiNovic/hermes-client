@@ -1,3 +1,4 @@
+// /store/store.ts
 import { create } from "zustand";
 import { User } from "@/models";
 
