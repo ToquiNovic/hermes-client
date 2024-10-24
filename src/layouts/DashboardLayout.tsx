@@ -1,12 +1,17 @@
 import { Outlet } from "react-router-dom";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "../components/app/sidebar/app-sidebar";
 
-const DashboardLayout = () => {
+function Layout() {
   return (
-    <>
-    <h1>Dashboard</h1>
-     <Outlet />
-    </>
+    <SidebarProvider>
+      <AppSidebar />
+      <main>
+        <SidebarTrigger />
+        <Outlet />
+      </main>
+    </SidebarProvider>
   );
-};
+}
 
-export default DashboardLayout;
+export default Layout;
