@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, StorageValue } from 'zustand/middleware';
 import { UserWithId } from '@/models';
 
+// Estado inicial del usuario
 const userEmptyState: UserWithId = {
   _id: "",
   username: "",
@@ -11,6 +12,7 @@ const userEmptyState: UserWithId = {
   refreshToken: "",
 };
 
+// Interfaz de la tienda de usuario
 interface UserStore {
   user: UserWithId;
   token: string | null;
@@ -20,11 +22,13 @@ interface UserStore {
   modifyUser: (partialUser: Partial<UserWithId>) => void;
   resetUser: () => void;
   logout: () => void;
-  verifyToken: () => Promise<boolean>;
+  verifyToken: () => boolean;
 }
 
+// Definir el tipo de lo que estamos guardando en localStorage
 type PersistedValue = StorageValue<UserStore> | null;
 
+// Wrapper para adaptarse al sistema de persistencia que espera zustand
 const localStorageWrapper = {
   getItem: (name: string): PersistedValue => {
     const item = localStorage.getItem(name);
@@ -38,6 +42,7 @@ const localStorageWrapper = {
   },
 };
 
+// Crear la tienda Zustand con persistencia
 export const useUserStore = create<UserStore>()(
   persist(
     (set, get) => ({
@@ -47,34 +52,18 @@ export const useUserStore = create<UserStore>()(
       login: (newUser, token) => {
         set({ user: newUser, token: token, isAuthenticated: true });
       },
-      createUser: (newUser) => set({ user: newUser }),
+      createUser: (newUser) => set({ user: newUser }), 
       modifyUser: (partialUser) =>
         set((state) => ({ user: { ...state.user, ...partialUser } })),
       resetUser: () => set({ user: userEmptyState, token: null, isAuthenticated: false }),
       logout: () => set({ user: userEmptyState, token: null, isAuthenticated: false }),
-      verifyToken: async () => {
+
+      verifyToken: () => {
         const { token, logout } = get();
-        if (!token) {
-          logout();
-          return false;
-        }
-        try {
-          const response = await fetch('/api/verify-token', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          if (response.ok) {
-            set({ isAuthenticated: true });
-            return true;
-          } else {
-            logout();
-            return false;
-          }
-        } catch (error) {
-          console.error('Error al verificar el token:', error);
+        if (token) {
+          set({ isAuthenticated: true });
+          return true;
+        } else {
           logout();
           return false;
         }
