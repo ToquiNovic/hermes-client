@@ -3,7 +3,7 @@ import axios, { AxiosError } from "axios";
 export const loginUser = async (username: string, password: string) => {
   try {
     // Realiza el login con la URL proporcionada
-    const response = await axios.post("http://localhost:3000/api/auth/login", {
+    const response = await axios.post("/api/auth/login", {
       username,
       password,
     });

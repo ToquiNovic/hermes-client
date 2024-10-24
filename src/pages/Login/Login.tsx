@@ -36,7 +36,7 @@ export const Login = () => {
       
       toast.success("Login successful!");
   
-      navigate("/dashboard"); 
+      navigate("/dashboard/team"); 
     } catch (error) {
       if (error instanceof Error) {
         form.setError("username", { type: "manual", message: error.message });
