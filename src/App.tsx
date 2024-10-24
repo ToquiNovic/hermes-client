@@ -1,13 +1,15 @@
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
+import { lazy } from "react";
 import { useContext } from 'react';
 import { AuthContext } from './contexts/AuthContext';
-import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Sensor from './pages/Sensor';
 import Users from './pages/Users';
 import Team from './pages/Team';
 import Perfil from './pages/Perfil';
+
+const Login = lazy(() => import("@/pages/Login/Login"));
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const authContext = useContext(AuthContext);
