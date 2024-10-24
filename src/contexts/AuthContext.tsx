@@ -1,24 +1,25 @@
 import React, { createContext } from 'react';
-import { useAuth } from '../store/authSlice';
-import { User } from '../types/User';
+import { useUserStore } from '../store/states';
+import { UserWithId } from '../types/User';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: User | null;
-  login: (userData: { username: string; role: "admin" | "student"; password?: string }) => void;
+  user: UserWithId | null;
+  login: (userData: UserWithId) => void;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const auth = useAuth();
+  const { user, isAuthenticated, login, logout } = useUserStore(); 
 
   return (
-    <AuthContext.Provider value={auth}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
+// Aquí exportamos AuthContext
 export { AuthContext };

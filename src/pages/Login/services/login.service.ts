@@ -2,33 +2,21 @@ import axios, { AxiosError } from "axios";
 
 export const loginUser = async (username: string, password: string) => {
   try {
-    await axios.post("/api/users", {
+    // Realiza el login con la URL proporcionada
+    const response = await axios.post("http://localhost:3000/api/auth/login", {
       username,
       password,
     });
-    return (
-      await axios.post("/api/auth/signin", {
-        username,
-        password,
-      })
-    ).data;
+
+    // Retorna los datos de la respuesta si la autenticación es exitosa
+    return response.data;
   } catch (error) {
     if (error instanceof AxiosError) {
-      if (error.response?.status === 409) {
-        try {
-          return (
-            await axios.post("/api/auth/signin", {
-              username,
-              password,
-            })
-          ).data;
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            throw new Error(err.response?.data.message);
-          }
-        }
-      }
-      throw new Error(error.response?.data.message);
+      // Manejo de errores: lanza el mensaje de error recibido del servidor
+      throw new Error(error.response?.data.message || "Error de autenticación");
+    } else {
+      // Manejo de otros errores desconocidos
+      throw new Error("Ocurrió un error desconocido durante el login");
     }
   }
 };

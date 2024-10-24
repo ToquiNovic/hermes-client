@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
-import { lazy } from "react";
-import { useContext } from 'react';
+import { useContext, lazy } from 'react';
 import { AuthContext } from './contexts/AuthContext';
+import { Toaster } from "@/components/ui/sonner"
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Sensor from './pages/Sensor';
@@ -20,6 +20,7 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 export default function App() {
   return (
     <BrowserRouter>
+    <Toaster position="top-right" richColors />
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
