@@ -1,113 +1,88 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { RegisterSchema } from "./Schema";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useNavigate, Link } from "react-router-dom";
-import { registerUser } from "./services";
-import { toast } from 'sonner';
+import { FC } from 'react';
+import { Progress } from '@/components/ui/progress';
+import { Label } from '@/components/ui/label';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { FirstStepForm } from './FirstStepForm';
+import { SecondStepForm } from './SecondStepForm';
+import { ThirdStepForm } from './ThirdStepForm';
+import useFormStore from '@/store/states/useFormStore';
 
-export const Register = () => {
-  const form = useForm<z.infer<typeof RegisterSchema>>({
-    resolver: zodResolver(RegisterSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-      confirmPassword: "",
-    },
-  });
+interface FirstStepFormProps {
+  onNextStep: () => void;
+}
 
-  const navigate = useNavigate();
+interface SecondStepFormProps {
+  onPrevious: () => void;
+  onNext: () => void;
+}
 
-  const onSubmit = async (values: z.infer<typeof RegisterSchema>) => {
-    try {
-      // Llamar a registerUser con los datos del formulario
-      await registerUser(values.username, values.password, "student");
-      
-      toast.success("Account created successfully!");
-  
-      navigate("/login");
-    } catch (error) {
-      if (error instanceof Error) {
-        form.setError("username", { type: "manual", message: error.message });
-        toast.error("Error during registration");
-      }
-    }
-  };
+interface ThirdStepFormProps {
+  onPrevious: () => void;
+  onFinish: () => void;
+}
+
+type StepProps = FirstStepFormProps | SecondStepFormProps | ThirdStepFormProps;
+
+const steps = [
+  { component: FirstStepForm },
+  { component: SecondStepForm },
+  { component: ThirdStepForm, hasFinish: true }
+];
+
+const FormRegister: FC = () => {
+  const { currentStep, nextStep, prevStep, resetForm } = useFormStore();
+
+  const StepComponent = steps[currentStep]?.component;
+
+  if (!StepComponent) {
+    return <div>Error: Paso no encontrado.</div>;
+  }
+
+  // Definir las props adecuadas para cada paso
+  let stepProps: StepProps = {} as StepProps;
+  if (currentStep === 0) {
+    stepProps = { onNextStep: nextStep };
+  } else if (currentStep === 1) {
+    stepProps = {
+      onPrevious: prevStep,
+      onNext: nextStep,
+    };
+  } else if (currentStep === 2) {
+    stepProps = {
+      onPrevious: prevStep,
+      onFinish: resetForm,
+    };
+  }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-8 w-full max-w-md bg-white shadow-lg p-10 rounded-lg"
-        >
-          <div className="flex items-center justify-center">
-            <span className="text-2xl font-semibold">Crear Cuenta</span>
-          </div>
-          <FormField
-            control={form.control}
-            name="username"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Usuario</FormLabel>
-                <FormControl>
-                  <Input placeholder="Username" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Contraseña</FormLabel>
-                <FormControl>
-                  <Input type="password" placeholder="Password" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="confirmPassword"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Confirmar Contraseña</FormLabel>
-                <FormControl>
-                  <Input type="password" placeholder="Confirm Password" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="w-full flex justify-center">
-            <Button size="sm" className="bg-green-600 w-full" type="submit">
-              Crear Cuenta
-            </Button>
-          </div>
-          <div className="text-center mt-4">
-            <span className="text-sm text-gray-600">¿Ya tienes cuenta?</span>
-            <Link to="/login" className="text-blue-500 hover:underline ml-1">
-              Iniciar Sesión
-            </Link>
-          </div>
-        </form>
-      </Form>
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="w-full max-w-md mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold">Registrarse</CardTitle>
+            <CardDescription>Ingresa tus credenciales para crear una cuenta</CardDescription>
+            <Separator className="my-8" />
+            
+            {/* Barra de progreso */}
+            <Progress value={((currentStep + 1) / steps.length) * 100} className="mb-6" />
+            
+            {/* Indicador de paso actual */}
+            <div className="flex justify-center mb-6 py-3">
+              <Label className="px-4 py-2 bg-primary text-primary-foreground rounded-full">
+                Paso {currentStep + 1} de {steps.length}
+              </Label>
+            </div>
+          </CardHeader>
+          
+          <CardContent>
+            {/* Pasar las props específicas para cada paso */}
+            <StepComponent {...stepProps} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
 
-export default Register;
+export default FormRegister;

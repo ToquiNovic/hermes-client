@@ -8,3 +8,8 @@ export const RegisterSchema = z.object({
   message: "Passwords must match",
   path: ["confirmPassword"],
 });
+
+export const InviteSchema = z.object({
+  inviteCode: z.string().optional(),
+  createTeam: z.string().optional(),
+});
