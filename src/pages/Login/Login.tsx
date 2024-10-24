@@ -32,11 +32,19 @@ export const Login = () => {
   const onSubmit = async (values: z.infer<typeof LoginSchema>) => {
     try {
       const user = await loginUser(values.username, values.password); 
-      login(user);
+      
+      login({
+        _id: user.id,
+        username: values.username,
+        role: user.role,
+        team: "",
+        isLeader: user.role === 'admin',
+        refreshToken: user.token,
+      }, user.token);
       
       toast.success("Login successful!");
   
-      navigate("/dashboard/team"); 
+      navigate("/dashboard/team");
     } catch (error) {
       if (error instanceof Error) {
         form.setError("username", { type: "manual", message: error.message });
@@ -44,7 +52,6 @@ export const Login = () => {
       }
     }
   };
-  
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">

@@ -1,23 +1,71 @@
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
-import { useContext, lazy } from "react";
-import { AuthContext } from "./contexts/AuthContext";
+import { Navigate, RouterProvider, createBrowserRouter } from "react-router-dom";
+import { lazy } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import Register from "@/pages/Register/Register";
-import Dashboard from "@/pages/Dashboard/Dashboard";
 import Sensor from "@/pages/Dashboard/Sensor";
 import Users from "@/pages/Dashboard/Users";
 import Team from "@/pages/Dashboard/Team";
 import Perfil from "@/pages/Dashboard/Perfil";
 import Spinner from "@/components/app/Spinner";
 import { useCheckBackend } from "@/hooks/useCheckBackend";
+import ErrorPage from "./pages/ErrorPage";
+import DashboardLayout from "./layouts/DashboardLayout";
+import { AuthProvider } from "./contexts/AuthContext";
+import { useAuth } from './contexts/useAuthContext';
 
 const Login = lazy(() => import("@/pages/Login/Login"));
 
-const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-  const authContext = useContext(AuthContext);
-  if (!authContext) return null;
-  return authContext.isAuthenticated ? children : <Navigate to="/login" />;
+const DashboardRoutes = () => {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  return <DashboardLayout />;
 };
+
+const router = createBrowserRouter([
+  {
+    path: '/dashboard',
+    element: <DashboardRoutes />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        path: '',
+        element: <Team />
+      },
+      {
+        path: 'team',
+        element: <Team />
+      },
+      {
+        path: 'users', 
+        element: <Users />
+      },
+      {
+        path: 'perfil',
+        element: <Perfil />
+      },
+      {
+        path: 'sensor',
+        element: <Sensor />
+      }
+    ]
+  },
+  {
+    path: '/',
+    element: <Navigate to="/login" />
+  },
+  {
+    path: '/login',
+    element: <Login />
+  },
+  {
+    path: '/register',
+    element: <Register />
+  }
+]);
 
 export default function App() {
   const { backendReady, loading } = useCheckBackend();
@@ -37,27 +85,9 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter>
+    <AuthProvider>
       <Toaster position="top-right" richColors />
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="" element={<Navigate to="team" />} />
-          <Route path="sensor" element={<Sensor />} />
-          <Route path="users" element={<Users />} />
-          <Route path="team" element={<Team />} />
-          <Route path="perfil" element={<Perfil />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+      <RouterProvider router={router} />
+    </AuthProvider>
   );
 }
