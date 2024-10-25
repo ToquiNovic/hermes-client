@@ -1,8 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEffect, useState } from "react";
-import { getSensors, getSensorById, ISensor, SensorData } from "./service/sensor.service";
+import {
+  getSensors,
+  getSensorById,
+  ISensor,
+  SensorData,
+} from "./service/sensor.service";
 import { useUserStore } from "@/store/states/userSlice";
-import SensorDrawer from './Sensor/SensorDrawer';
+import SensorDrawer from "./Sensor/SensorDrawer";
 import { Bolt, Trash2, ScanEye, BadgePlus } from "lucide-react";
 
 const Sensor = () => {
@@ -40,14 +45,19 @@ const Sensor = () => {
   }, [user, token]);
 
   const handleOpenDrawer = async (sensorId: string) => {
-    try {
-      if (token) {
-        const detailedSensor = await getSensorById(sensorId, token);                
-        setSelectedSensor(detailedSensor);
-        setShowDrawer(true);
+    if (selectedSensor && selectedSensor._id === sensorId && showDrawer) {      
+      setShowDrawer(false);
+      setSelectedSensor(null);
+    } else {
+      try {
+        if (token) {
+          const detailedSensor = await getSensorById(sensorId, token);        
+          setSelectedSensor(detailedSensor.sensor);
+          setShowDrawer(true);
+        }
+      } catch (err) {
+        console.error("Error al obtener detalles del sensor:", err);
       }
-    } catch (err) {
-      console.error("Error al obtener detalles del sensor:", err);
     }
   };
 
@@ -58,7 +68,9 @@ const Sensor = () => {
     <div className="max-w-screen m-4 p-2">
       <div className="flex justify-between mb-4">
         <button
-          className={`p-2 text-xl text-gray-600 hover:text-gray-800 ${!showActions ? "invisible" : ""}`}
+          className={`p-2 text-xl text-gray-600 hover:text-gray-800 ${
+            !showActions ? "invisible" : ""
+          }`}
           onClick={() => console.log("Add new sensor action")}
         >
           <BadgePlus size={24} />
@@ -78,7 +90,9 @@ const Sensor = () => {
               {showActions && (
                 <button
                   className="absolute top-6 right-2 text-red-600 hover:text-red-800 z-10"
-                  onClick={() => console.log(`Eliminar sensor con ID: ${sensor._id}`)}
+                  onClick={() =>
+                    console.log(`Eliminar sensor con ID: ${sensor._id}`)
+                  }
                 >
                   <Trash2 size={20} />
                 </button>
@@ -95,12 +109,16 @@ const Sensor = () => {
                   <CardTitle>{sensor.name}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground">Equipo: {sensor.team}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Equipo: {sensor.team}
+                  </p>
                   <p className="text-sm text-muted-foreground">
                     Creado: {new Date(sensor.createdAt).toLocaleString()}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Actualizado: {new Date(sensor.updatedAt).toLocaleString() || "No disponible"}
+                    Actualizado:{" "}
+                    {new Date(sensor.updatedAt).toLocaleString() ||
+                      "No disponible"}
                   </p>
 
                   <div className="mt-4">
@@ -114,7 +132,8 @@ const Sensor = () => {
                           <p className="text-sm">Nombre: {dataPoint.name}</p>
                           <p className="text-sm">Valor: {dataPoint.value}</p>
                           <p className="text-sm">
-                            Fecha: {new Date(dataPoint.timestamp).toLocaleString()}
+                            Fecha:{" "}
+                            {new Date(dataPoint.timestamp).toLocaleString()}
                           </p>
                         </div>
                       ))
@@ -135,7 +154,8 @@ const Sensor = () => {
         <SensorDrawer
           isOpen={showDrawer}
           onClose={() => setShowDrawer(false)}
-          sensor={selectedSensor.sensor} endpoint={""}        />
+          sensor={selectedSensor}
+        />
       )}
     </div>
   );

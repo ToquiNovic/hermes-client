@@ -46,15 +46,21 @@ export const getSensors = async (userId: string, accessToken: string): Promise<I
   }
 };
 
-export const getSensorById = async (sensorId: string, accessToken: string): Promise<ISensor> => {
+export const getSensorById = async (
+  sensorId: string,
+  accessToken: string
+): Promise<{ sensor: ISensor; endpoint: string }> => {
   try {
     const response = await axios.get(`/api/sensor/${sensorId}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`
       }
     });
-    
-    return response.data;
+
+    return {
+      sensor: response.data.sensor,
+      endpoint: response.data.endpoint
+    };
   } catch (error) {
     if (error instanceof AxiosError) {
       throw new Error(error.response?.data.message || "Error al obtener el sensor");
@@ -63,6 +69,7 @@ export const getSensorById = async (sensorId: string, accessToken: string): Prom
     }
   }
 };
+
 
 export const updateSensorData = async (
   sensorId: string,
