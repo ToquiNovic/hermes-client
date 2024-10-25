@@ -63,7 +63,7 @@ export const useUserStore = create<UserStore>()(
         if (token) {
           set({ isAuthenticated: true });
           return true;
-        } else {
+        } else { 
           logout();
           return false;
         }

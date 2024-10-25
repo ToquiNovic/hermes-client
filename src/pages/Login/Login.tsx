@@ -33,8 +33,9 @@ export const Login = () => {
     try {
       const user = await loginUser(values.username, values.password); 
       
+      // Asegúrate de que estás pasando el _id aquí correctamente
       login({
-        _id: user.id,
+        _id: user._id, // Aquí estás usando el _id que proviene de la respuesta del backend
         username: values.username,
         role: user.role,
         team: "",
