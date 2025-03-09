@@ -1,21 +1,14 @@
 // redux/store.ts
 import { configureStore } from "@reduxjs/toolkit";
 import { persistStore } from "redux-persist";
-// import storage from "redux-persist/lib/storage";
 import { FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
-// import userReducer from "./states/userSlice";
-import { persistedSidebarReducer } from "./states/sidebarSlice.ts"; 
+import { persistedSidebarReducer } from "./states/sidebarSlice.ts";
+import { supabasePersistReducer } from "./states/supabaseSlice.ts";
 
-// const userPersistConfig = {
-//   key: "user",
-//   storage,
-// };
-
-// const persistedUserReducer = persistReducer(userPersistConfig, userReducer);
 
 export const store = configureStore({
   reducer: {
-    // user: persistedUserReducer,
+    supabase: supabasePersistReducer,
     sidebar: persistedSidebarReducer, 
   },
   middleware: (getDefaultMiddleware) =>
@@ -32,4 +25,4 @@ export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
 export * from "./states/sidebarSlice.ts";
-// export * from "./states/sidebarSlice";
+export * from "./states/supabaseSlice.ts";

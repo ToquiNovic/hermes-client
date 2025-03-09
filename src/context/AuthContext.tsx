@@ -1,90 +1,77 @@
-import { createContext, ReactNode, useState, useEffect } from 'react';
-import supabase from '@/lib/supabaseClient';
-import { User, Session } from '@supabase/supabase-js';
-
-interface SupabaseSignInResponse {
-  user: User | null;
-  session: Session | null;
-}
-
-interface SignInResponse {
-  data: SupabaseSignInResponse | null;
-  error: Error | null;
-}
-
-interface SignOutResponse {
-  error: Error | null;
-}
+// @/context/AuthContext.tsx
+import { createContext, ReactNode, useEffect } from "react";
+import supabase from "@/lib/supabaseClient";
+import { User, Session } from "@supabase/supabase-js";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import { authStart, authSuccess, authFailure, authSignOut } from "@/redux/states/supabaseSlice";
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signIn: () => Promise<SignInResponse>;
-  signOut: () => Promise<SignOutResponse>;
+  signIn: () => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const dispatch = useDispatch();
+  const { user, session, loading } = useSelector((state: RootState) => state.supabase);
 
   useEffect(() => {
     const fetchSession = async () => {
-      // Asegúrate de que la respuesta de getSession tenga el tipo correcto
+      dispatch(authStart());
       const { data, error } = await supabase.auth.getSession();
       if (error) {
-        console.error("Error fetching session:", error.message);
-      } else if (data?.session) {
-        setUser(data.session.user); // Ajustado para acceder a la sesión y el usuario
-        setSession(data.session);
+        dispatch(authFailure(error.message));
       } else {
-        setUser(null);
-        setSession(null);
+        dispatch(authSuccess({ user: data.session?.user || null, session: data.session || null }));
       }
     };
 
     fetchSession();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session) {
-          setUser(session.user);
-          setSession(session);
-        } else {
-          setUser(null);
-          setSession(null);
-        }
-        setLoading(false);
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        dispatch(authSuccess({ user: session.user, session }));
+      } else {
+        dispatch(authSignOut());
       }
-    );
+    });
 
     return () => {
       listener?.subscription.unsubscribe();
     };
-  }, []);
+  }, [dispatch]);
 
-  const signIn = async (): Promise<SignInResponse> => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
+  const signIn = async () => {
+    dispatch(authStart());
+    
+    const {  error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
       options: { skipBrowserRedirect: false },
     });
   
-    if (data && data.user) {
-      return { data: { user: data.user, session: data.session || null }, error: null };
+    if (error) {
+      dispatch(authFailure(error.message));
+      return;
+    }
+  
+    // Esperar a que el usuario se autentique y obtener la sesión actualizada
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  
+    if (sessionError) {
+      dispatch(authFailure(sessionError.message));
     } else {
-      return { data: null, error: error || new Error('No user data returned') };
+      dispatch(authSuccess({ user: sessionData.session?.user || null, session: sessionData.session || null }));
     }
   };
 
-  const signOut = async (): Promise<SignOutResponse> => {
-    const { error } = await supabase.auth.signOut();
-    if (!error) {
-      setUser(null);
-      setSession(null);
-    }
-    return { error };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    dispatch(authSignOut());
   };
 
   return (

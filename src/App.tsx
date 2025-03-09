@@ -6,15 +6,22 @@ import { Toaster } from "@/components/ui/sonner";
 import { AdminPanelLayout, PublicLayout } from "./layouts";
 import { AdminGuard } from "@/components/AdminGuard";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Dashboard, HomePage, ConfirmEmail, UsersPage, RolesPage, TeamsPage, AccountPage, SensorsPage, SensorsPanel } from "@/pages";
+import {
+  Dashboard,
+  HomePage,
+  ConfirmEmail,
+  UsersPage,
+  RolesPage,
+  TeamsPage,
+  AccountPage,
+  SensorsPage,
+  SensorsPanel,
+} from "@/pages";
 import { store, persistor } from "./redux/store";
 import { Spinner } from "@/components";
 import { useCheckBackend } from "@/hooks";
 import CompleteProfile from "./pages/register/complete-profile";
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { useAuth, AuthProvider } from "@/context";
-import supabase from "@/lib/supabaseClient";
+import { AuthProvider, ProtectedRoute } from "@/context";
 
 const Login = lazy(() => import("@/pages/login/loginPage"));
 const Register = lazy(() => import("@/pages/register/registerPage"));
@@ -40,68 +47,64 @@ function AppWrapper() {
 }
 
 function App() {
-  const { session } = useAuth();
+  return (
+    <TooltipProvider>
+      <PersistGate
+        loading={<div>Loading persisted state...</div>}
+        persistor={persistor}
+      >
+        <Toaster
+          position="bottom-right"
+          richColors
+          expand={true}
+          duration={3000}
+          closeButton={true}
+        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <Routes>
+            {/* Rutas Públicas */}
+            <Route element={<PublicLayout />}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/complete-profile" element={<CompleteProfile />} />
+              <Route path="/confirm-email" element={<ConfirmEmail />} />
+            </Route>
 
-  if (!session) {
-    return (
-      <Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} />
-    );
-  } else {
-    return (
-      <Provider store={store}>
-        <TooltipProvider>
-          <PersistGate
-            loading={<div>Loading persisted state...</div>}
-            persistor={persistor}
-          >
-            <Toaster
-              position="bottom-right"
-              richColors
-              expand={true}
-              duration={3000}
-              closeButton={true}
-            />
-            <Suspense fallback={<div>Loading...</div>}>
-              <Routes>
-                {/* Rutas Públicas */}
-                <Route element={<PublicLayout />}>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/complete-profile" element={<CompleteProfile />} />
-                  <Route path="/confirm-email" element={<ConfirmEmail />} />
-                </Route>
+            {/* Rutas Protegidas para cualquier usuario autenticado */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AdminPanelLayout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/account" element={<AccountPage />} />
+                <Route path="/sensors" element={<SensorsPage />} />
+                <Route path="/sensors-panel" element={<SensorsPanel />} />
 
-                {/* Rutas Protegidas */}
+                {/* Rutas Exclusivas para Administradores */}
                 <Route element={<AdminGuard />}>
-                  <Route element={<AdminPanelLayout />}>
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/users" element={<UsersPage />} />
-                    <Route path="/roles" element={<RolesPage />} />
-                    <Route path="/teams" element={<TeamsPage />} />
-                    <Route path="/account" element={<AccountPage />} />
-                    <Route path="/sensors" element={<SensorsPage />} />
-                    <Route path="/sensors-panel" element={<SensorsPanel />} />
-                  </Route>
+                  <Route path="/users" element={<UsersPage />} />
+                  <Route path="/roles" element={<RolesPage />} />
+                  <Route path="/teams" element={<TeamsPage />} />
                 </Route>
+              </Route>
+            </Route>
 
-                {/* Fallback para rutas no encontradas */}
-                <Route path="*" element={<Navigate to="/" />} />
-              </Routes>
-            </Suspense>
-          </PersistGate>
-        </TooltipProvider>
-      </Provider>
-    );
-  }
+            {/* Fallback para rutas no encontradas */}
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </Suspense>
+      </PersistGate>
+    </TooltipProvider>
+  );
 }
 
 export default function MainApp() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppWrapper />
-      </AuthProvider>
+      <Provider store={store}>
+        <AuthProvider>
+          <AppWrapper />
+        </AuthProvider>
+      </Provider>
     </BrowserRouter>
   );
 }
