@@ -10,8 +10,7 @@ import {
 import { RootState } from "@/redux/store";
 
 export const useSidebar = () => {
-  const dispatch = useDispatch();
-  
+  const dispatch = useDispatch();  
   const sidebarState = useSelector((state: RootState) => state.sidebar);
   const isOpen = useSelector(selectSidebarOpenState);
 

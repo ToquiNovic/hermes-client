@@ -1,40 +1,33 @@
 // @/layouts/AdminLayout.tsx
-import { useEffect, useState } from "react";
-import { Navigate, Outlet } from "react-router-dom";
-import supabase from "@/lib/supabaseClient";
+import { Outlet } from "react-router-dom";
+import { Sidebar } from "@/components/app/sidebar/sidebar";
+import { Toaster } from "sonner";
+import { useSidebar } from "@/hooks";
+import { cn } from "@/lib/utils";
 
-export default function AdminGuard() {
-  
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+export default function AdminLayout() {
+  const sidebar = useSidebar();
+  if (!sidebar) return null;
+  const { isOpen, settings } = sidebar;
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      console.log("Sesión obtenida:", session);
-
-      setIsAuthenticated(!!session); 
-    };
-
-    // Listener para detectar cambios en la sesión
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_, session) => {
-        console.log("Cambio en sesión:", session);
-        setIsAuthenticated(!!session);
-      }
-    );
-
-    checkAuth();
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
-
-  if (isAuthenticated === null) return <div>Cargando...</div>;
-
-  return isAuthenticated ? <Outlet /> : <Navigate to="/unauthorized" />;
+  return (
+    <>
+      <Sidebar />
+      <main
+        className={cn(
+          "min-h-[calc(100vh_-_56px)] bg-zinc-50 dark:bg-zinc-900 transition-[margin-left] ease-in-out duration-300",
+          !settings?.disabled && (!isOpen ? "lg:ml-[90px]" : "lg:ml-72")
+        )}
+      >
+        <Outlet />
+        <Toaster position="top-right" richColors />
+      </main>
+      <footer
+        className={cn(
+          "transition-[margin-left] ease-in-out duration-300",
+          !settings?.disabled && (!isOpen ? "lg:ml-[90px]" : "lg:ml-72")
+        )}
+      />
+    </>
+  );
 }
-
