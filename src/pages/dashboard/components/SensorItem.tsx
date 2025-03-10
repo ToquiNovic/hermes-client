@@ -1,24 +1,17 @@
+// @/pages/dashboard/components/SensorItem.tsx
 import { useEffect, useState } from "react";
 import { BentoGridItem } from "@/components/ui/bento-grid";
 import { PenTool } from "lucide-react";
-
-interface Sensor {
-  id: string;
-  name: string;
-  type: string;
-}
-
-interface SensorItemProps {
-  teamId: string;
-}
+import { SensorItemProps, Sensor } from "@/models/sensor.model";
 
 const SensorItem = ({ teamId }: SensorItemProps) => {
   const [sensors, setSensors] = useState<Sensor[]>([]);
 
+  // console.log("teamId:", teamId);
+
   useEffect(() => {
-    // Simulación de fetch de sensores (puedes reemplazar con una API real)
+    if (!teamId) return;
     const fetchSensors = async () => {
-      // Aquí iría tu petición real a la API
       const mockSensors: Sensor[] = [
         { id: "1", name: "Sensor de Temperatura", type: "Temperatura" },
         { id: "2", name: "Sensor de Humedad", type: "Humedad" },
@@ -34,14 +27,18 @@ const SensorItem = ({ teamId }: SensorItemProps) => {
     <BentoGridItem
       title="Sensores del equipo"
       description={
-        sensors.length > 0
+        !teamId
+          ? "El equipo no tiene sensores"
+          : sensors.length > 0
           ? sensors.map((sensor) => `• ${sensor.name} (${sensor.type})`).join("\n")
           : "No hay sensores disponibles"
       }
       header={
         <div className="flex flex-col items-start justify-center min-h-[6rem] rounded-xl bg-neutral-100 dark:bg-black border dark:border-white/[0.2] p-4">
           <p className="font-bold">📡 Sensores:</p>
-          {sensors.length > 0 ? (
+          {!teamId ? (
+            <p className="text-sm text-red-500">El equipo no tiene sensores</p>
+          ) : sensors.length > 0 ? (
             sensors.map((sensor) => (
               <p key={sensor.id} className="text-sm">
                 ✅ {sensor.name} ({sensor.type})
@@ -59,3 +56,4 @@ const SensorItem = ({ teamId }: SensorItemProps) => {
 };
 
 export default SensorItem;
+
