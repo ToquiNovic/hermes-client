@@ -1,2 +1,2 @@
 export { SensorCard } from './sensorCard';
-export { AddSensorDialog } from './addSensor';
+export { ConectSensorDialog } from './ConectSensorDialog';

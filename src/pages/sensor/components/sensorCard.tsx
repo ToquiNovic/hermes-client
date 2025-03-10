@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Trash2, IndentIncrease } from "lucide-react";
 import { Sensor } from "@/models";
-import { AddSensorDialog } from "./addSensor";
+import { ConectSensorDialog } from "./ConectSensorDialog";
 import { getSensorData } from "../service";
 import { SensorData } from "@/models";
 
@@ -98,7 +98,9 @@ export const SensorCard: React.FC<SensorCardProps> = ({ sensor, onDelete }) => {
       </CardFooter>
 
       {/* Diálogo para agregar campos */}
-      <AddSensorDialog
+      <ConectSensorDialog
+        sensorId={sensor.id}
+        teamId={sensor.teamId}
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
       />
