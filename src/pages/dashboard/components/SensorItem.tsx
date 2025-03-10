@@ -13,9 +13,9 @@ const SensorItem = ({ teamId }: SensorItemProps) => {
     if (!teamId) return;
     const fetchSensors = async () => {
       const mockSensors: Sensor[] = [
-        { id: "1", name: "Sensor de Temperatura", type: "Temperatura" },
-        { id: "2", name: "Sensor de Humedad", type: "Humedad" },
-        { id: "3", name: "Sensor de Presión", type: "Presión" },
+        { id: "1", name: "Sensor de Temperatura", teamId: teamId },
+        { id: "2", name: "Sensor de Humedad", teamId: teamId },
+        { id: "3", name: "Sensor de Presión", teamId: teamId },
       ];
       setSensors(mockSensors);
     };
@@ -30,7 +30,7 @@ const SensorItem = ({ teamId }: SensorItemProps) => {
         !teamId
           ? "El equipo no tiene sensores"
           : sensors.length > 0
-          ? sensors.map((sensor) => `• ${sensor.name} (${sensor.type})`).join("\n")
+          ? sensors.map((sensor) => `• ${sensor.name} (${sensor.description})`).join("\n")
           : "No hay sensores disponibles"
       }
       header={
@@ -41,7 +41,7 @@ const SensorItem = ({ teamId }: SensorItemProps) => {
           ) : sensors.length > 0 ? (
             sensors.map((sensor) => (
               <p key={sensor.id} className="text-sm">
-                ✅ {sensor.name} ({sensor.type})
+                ✅ {sensor.name} ({sensor.description})
               </p>
             ))
           ) : (

@@ -4,7 +4,7 @@ import { Team } from '@/models';
 export interface Sensor {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   teamId: string;
 }
 
