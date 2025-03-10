@@ -6,7 +6,7 @@ import { User, Session } from "@supabase/supabase-js";
 
 interface SupabaseState {
   loading: boolean;
-  user: User | null;
+  user: (User & { teamId?: string | null }) | null;
   session: Session | null;
   error: string | null;
 }
@@ -28,7 +28,7 @@ const supabaseSlice = createSlice({
     },
     authSuccess: (state, action: PayloadAction<{ user: User | null; session: Session | null }>) => {
       state.loading = false;
-      state.user = action.payload.user;
+      state.user = action.payload.user ? { ...action.payload.user, teamId: null } : null;
       state.session = action.payload.session;
     },
     authFailure: (state, action: PayloadAction<string>) => {
@@ -43,8 +43,17 @@ const supabaseSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
+    setUser(state, action: PayloadAction<User | null>) {
+      state.user = action.payload;
+    },
+    updateTeamId: (state, action: PayloadAction<string | null>) => {
+      if (state.user) {
+        state.user.teamId = action.payload;
+      }
+    },
   },
 });
+
 
 const supabasePersistConfig = {
   key: "supabase",
@@ -53,5 +62,5 @@ const supabasePersistConfig = {
 
 export const supabasePersistReducer = persistReducer(supabasePersistConfig, supabaseSlice.reducer);
 
-export const { authStart, authSuccess, authFailure, authSignOut } = supabaseSlice.actions;
+export const { authStart, authSuccess, authFailure, authSignOut, setUser, updateTeamId } = supabaseSlice.actions;
 export default supabaseSlice.reducer;

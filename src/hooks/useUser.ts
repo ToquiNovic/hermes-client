@@ -7,7 +7,7 @@ export const useUser = (userId: string) => {
   const [userData, setUserData] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  
   useEffect(() => {
     const fetchUser = async () => {
       try {

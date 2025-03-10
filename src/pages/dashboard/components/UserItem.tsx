@@ -1,51 +1,26 @@
 // @/pages/dashboard/components/UserItem.tsx
 import { BentoGridItem } from "@/components/ui/bento-grid";
-import { Clipboard } from "lucide-react";
-import { useUser } from "@/hooks";
 import { UserItemProps } from "@/models";
+import ColourfulText from "@/components/ui/colourful-text";
 
 const UserItem = ({ supabaseUser }: UserItemProps) => {
-  const { userData, loading, error } = useUser(supabaseUser.id);
 
-  if (loading) {
-    return (
-      <BentoGridItem
-        title="Cargando..."
-        description="Obteniendo datos del usuario..."
-      />
-    );
-  }
-
-  if (error) {
-    return (
-      <BentoGridItem
-        title="Error"
-        description="No se pudo cargar el usuario."
-      />
-    );
-  }
-
-  const profileImage = userData?.imageUrl || supabaseUser.image || null;
+ const Skeleton = () => {
+  return (
+    <div className="h-screen w-full flex items-center justify-self-start relative overflow-hidden">
+      <h1 className="font-bold text-left text-4xl">
+        Hola, <ColourfulText text={`${supabaseUser.name.toUpperCase() || "Usuario desconocido"}`} /> <br />
+        Bienvenid@ de vuelta!
+      </h1>
+    </div>
+  );
+};
 
   return (
     <BentoGridItem
-      title={`Hola, ${supabaseUser.name || "Usuario desconocido"}`}
       description={`Correo: ${supabaseUser.email}`}
-      header={
-        <div className="flex flex-1 items-center justify-center min-h-[6rem] rounded-xl bg-neutral-100 dark:bg-black border dark:border-white/[0.2]">
-          {profileImage ? (
-            <img
-              src={profileImage}
-              alt="Avatar"
-              className="w-12 h-12 rounded-full"
-            />
-          ) : (
-            <span className="text-neutral-500">Sin imagen</span>
-          )}
-        </div>
-      }
+      header={<Skeleton />}
       className="md:col-span-2"
-      icon={<Clipboard className="h-4 w-4 text-neutral-500" />}
     />
   );
 };

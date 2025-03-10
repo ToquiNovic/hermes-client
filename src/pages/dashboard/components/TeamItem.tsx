@@ -1,32 +1,65 @@
-// @/pages/dashboard/components/TeamItem.tsx
 import { useEffect, useState } from "react";
 import { BentoGridItem } from "@/components/ui/bento-grid";
-import { FileWarning } from "lucide-react";
 import { UserItemProps, Team } from "@/models";
 import { useUser } from "@/hooks";
 import { getTeamById } from "@/services";
+import { AnimatedTooltip } from "@/components/ui/animated-tooltip";
+import { motion } from "framer-motion";
+import { getTeamMembers } from "@/pages/dashboard/services";
+
+interface TeamMember {
+  id: number;
+  name: string;
+  designation: string;
+  image: string;
+}
 
 const TeamItem = ({ supabaseUser }: UserItemProps) => {
   const { userData, loading, error } = useUser(supabaseUser.id);
   const [team, setTeam] = useState<Team | null>(null);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
 
   useEffect(() => {
     const fetchTeam = async () => {
       if (!userData?.teamId) return;
       try {
         const response = await getTeamById(userData.teamId);
-        if (response && response.success && response.data) {
+        const teamMembersResponse = await getTeamMembers(userData.teamId);
+
+        if (response?.success && response.data) {
           setTeam(response.data);
         } else {
           setTeam(null);
         }
-      } catch {
+
+        const roleTeam =
+          response?.data?.AdminTeamId === userData.id ? "Admin" : "Miembro";
+
+        if (
+          teamMembersResponse?.success &&
+          teamMembersResponse.data.length > 0
+        ) {
+          const formattedMembers: TeamMember[] = teamMembersResponse.data.map(
+            (member: { imageUrl: string | null }, index: number) => ({
+              id: index,
+              name: supabaseUser.name || "Usuario desconocido",
+              designation: roleTeam,
+              image:
+                member.imageUrl || supabaseUser.image || "/default-avatar.png",
+            })
+          );
+          setTeamMembers(formattedMembers);
+        } else {
+          setTeamMembers([]);
+        }
+      } catch (error) {
+        console.error("Error al obtener el equipo:", error);
         setTeam(null);
       }
     };
 
     fetchTeam();
-  }, [userData]);
+  }, [userData, supabaseUser.image, supabaseUser.name]);
 
   if (loading) {
     return (
@@ -46,17 +79,33 @@ const TeamItem = ({ supabaseUser }: UserItemProps) => {
     );
   }
 
+  const teamProfileImage = team?.urlImage || null;
+
+  const Skeleton = () => {
+    return (
+      <div className="h-screen w-full flex items-center justify-center relative overflow-hidden">
+        <h1 className="absolute top-4 left-1/2 transform -translate-x-1/2 font-bold text-4xl text-center">
+          {team ? team.name : "Sin equipo"}
+        </h1>
+        <motion.img
+          src={teamProfileImage || "/metasync-logo.webp"}
+          className="h-full w-full object-cover absolute inset-0 [mask-image:radial-gradient(circle,transparent,black_80%)] pointer-events-none"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.5 }}
+          transition={{ duration: 1 }}
+        />
+        <div className="flex flex-row items-center justify-center mb-10 w-full">
+          <AnimatedTooltip items={teamMembers} />
+        </div>
+      </div>
+    );
+  };
+
   return (
     <BentoGridItem
-      title="Equipo"
-      description={team ? team.name : "Sin equipo"}
-      header={
-        <div className="flex flex-1 items-center justify-center min-h-[6rem] rounded-xl bg-neutral-100 dark:bg-black border dark:border-white/[0.2]">
-          🏆 {team ? team.name : "Cargando..."}
-        </div>
-      }
+      title={`Código de equipo: ${team ? team?.inviteCode : "Sin código"}`}
+      header={<Skeleton />}
       className="md:col-span-1"
-      icon={<FileWarning className="h-4 w-4 text-neutral-500" />}
     />
   );
 };

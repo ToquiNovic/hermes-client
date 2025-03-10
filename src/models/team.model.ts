@@ -3,7 +3,7 @@ import { SupabaseUser } from "./user.model";
 export interface Team {
   id: string;
   name: string;
-  invitecode: string;
+  inviteCode: string;
   urlImage: string;
   AdminTeamId: string;
   token: string;
