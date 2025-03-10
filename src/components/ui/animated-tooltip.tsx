@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { motion, useTransform, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
+import {
+  motion,
+  useTransform,
+  AnimatePresence,
+  useMotionValue,
+  useSpring,
+} from "framer-motion";
 
 export const AnimatedTooltip = ({
   items,
@@ -25,13 +31,14 @@ export const AnimatedTooltip = ({
     springConfig
   );
   const handleMouseMove = (event: React.MouseEvent) => {
-    const halfWidth = event.currentTarget.offsetWidth / 2;
-    x.set(event.nativeEvent.offsetX - halfWidth); // set the x value, which is then used in transform and rotate
+    const target = event.currentTarget as HTMLElement;
+    const halfWidth = target.offsetWidth / 2;
+    x.set(event.nativeEvent.offsetX - halfWidth);
   };
 
   return (
     <>
-      {items.map((item, idx) => (
+      {items.map((item) => (
         <div
           className="-mr-4 relative group"
           key={item.name}
