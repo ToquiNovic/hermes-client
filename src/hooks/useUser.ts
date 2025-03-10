@@ -1,3 +1,4 @@
+// @/hooks/useUser.ts
 import { useEffect, useState } from "react";
 import { getUserById } from "@/services";
 import { User } from "@/models";
