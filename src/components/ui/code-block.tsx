@@ -1,8 +1,7 @@
 "use client";
-import React from "react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { atomDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
-import { IconCheck, IconCopy } from "@tabler/icons-react";
+import { useEffect, useState, useMemo } from "react";
+import { getHighlighter } from "shikiji";
+import { Check, Copy } from "lucide-react";
 
 type CodeBlockProps = {
   language: string;
@@ -31,41 +30,60 @@ export const CodeBlock = ({
   highlightLines = [],
   tabs = [],
 }: CodeBlockProps) => {
-  const [copied, setCopied] = React.useState(false);
-  const [activeTab, setActiveTab] = React.useState(0);
+  const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+  const [html, setHtml] = useState("");
 
   const tabsExist = tabs.length > 0;
+  const activeCode = tabsExist ? tabs[activeTab].code : code ?? "";
+  const activeLanguage = tabsExist ? tabs[activeTab].language || language : language;
+
+  const activeHighlightLines = useMemo(
+    () => (tabsExist ? tabs[activeTab].highlightLines || [] : highlightLines),
+    [tabsExist, tabs, activeTab, highlightLines]
+  );
+
+  useEffect(() => {
+    const loadHighlighter = async () => {
+      const highlighter = await getHighlighter({ themes: ["github-dark"] });
+      const highlightedHtml = highlighter.codeToHtml(activeCode ?? "", {
+        lang: activeLanguage || "plaintext",
+        theme: "github-dark",
+      });
+
+      // Modificar el HTML generado para resaltar las líneas especificadas
+      const lines = highlightedHtml.split("\n").map((line, index) => {
+        if (activeHighlightLines.includes(index + 1)) {
+          return `<div class="highlight">${line}</div>`;
+        }
+        return `<div>${line}</div>`;
+      });
+
+      setHtml(lines.join("\n"));
+    };
+
+    loadHighlighter();
+  }, [activeCode, activeLanguage, activeHighlightLines]);
 
   const copyToClipboard = async () => {
-    const textToCopy = tabsExist ? tabs[activeTab].code : code;
-    if (textToCopy) {
-      await navigator.clipboard.writeText(textToCopy);
+    if (activeCode) {
+      await navigator.clipboard.writeText(activeCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
-  const activeCode = tabsExist ? tabs[activeTab].code : code;
-  const activeLanguage = tabsExist
-    ? tabs[activeTab].language || language
-    : language;
-  const activeHighlightLines = tabsExist
-    ? tabs[activeTab].highlightLines || []
-    : highlightLines;
-
   return (
     <div className="relative w-full rounded-lg bg-slate-900 p-4 font-mono text-sm">
       <div className="flex flex-col gap-2">
         {tabsExist && (
-          <div className="flex  overflow-x-auto">
+          <div className="flex overflow-x-auto">
             {tabs.map((tab, index) => (
               <button
                 key={index}
                 onClick={() => setActiveTab(index)}
                 className={`px-3 !py-2 text-xs transition-colors font-sans ${
-                  activeTab === index
-                    ? "text-white"
-                    : "text-zinc-400 hover:text-zinc-200"
+                  activeTab === index ? "text-white" : "text-zinc-400 hover:text-zinc-200"
                 }`}
               >
                 {tab.name}
@@ -80,35 +98,21 @@ export const CodeBlock = ({
               onClick={copyToClipboard}
               className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-200 transition-colors font-sans"
             >
-              {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+              {copied ? <Check size={14} /> : <Copy size={14} />}
             </button>
           </div>
         )}
       </div>
-      <SyntaxHighlighter
-        language={activeLanguage}
-        style={atomDark}
-        customStyle={{
-          margin: 0,
-          padding: 0,
-          background: "transparent",
-          fontSize: "0.875rem", // text-sm equivalent
-        }}
-        wrapLines={true}
-        showLineNumbers={true}
-        lineProps={(lineNumber) => ({
-          style: {
-            backgroundColor: activeHighlightLines.includes(lineNumber)
-              ? "rgba(255,255,255,0.1)"
-              : "transparent",
-            display: "block",
-            width: "100%",
-          },
-        })}
-        PreTag="div"
-      >
-        {String(activeCode)}
-      </SyntaxHighlighter>
+      <div className="overflow-x-auto" dangerouslySetInnerHTML={{ __html: html }} />
+      <style>
+        {`
+          .highlight {
+            background-color: rgba(255, 255, 0, 0.2);
+            display: block;
+            width: 100%;
+          }
+        `}
+      </style>
     </div>
   );
 };

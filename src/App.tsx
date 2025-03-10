@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Provider } from "react-redux";
-import { lazy, Suspense } from "react";
+import { lazy, memo, Suspense } from "react";
 import { PersistGate } from "redux-persist/integration/react";
 import { Toaster } from "@/components/ui/sonner";
 import { AdminPanelLayout, PublicLayout } from "./layouts";
@@ -26,13 +26,10 @@ import { AuthProvider, ProtectedRoute } from "@/context";
 const Login = lazy(() => import("@/pages/login/loginPage"));
 const Register = lazy(() => import("@/pages/register/registerPage"));
 
-function AppWrapper() {
+const AppWrapper = memo(() => {
   const { backendReady, loading } = useCheckBackend();
 
-  if (loading) {
-    return <Spinner />;
-  }
-
+  if (loading) return <Spinner />;
   if (!backendReady) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -44,15 +41,11 @@ function AppWrapper() {
   }
 
   return <App />;
-}
+});
 
 function App() {
   return (
     <TooltipProvider>
-      <PersistGate
-        loading={<div>Loading persisted state...</div>}
-        persistor={persistor}
-      >
         <Toaster
           position="bottom-right"
           richColors
@@ -92,7 +85,6 @@ function App() {
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Suspense>
-      </PersistGate>
     </TooltipProvider>
   );
 }
@@ -101,9 +93,12 @@ export default function MainApp() {
   return (
     <BrowserRouter>
       <Provider store={store}>
-        <AuthProvider>
-          <AppWrapper />
-        </AuthProvider>
+        <PersistGate loading={<Spinner />} persistor={persistor}>
+          <AuthProvider>
+            {/* <Toaster position="bottom-right" richColors expand duration={3000} closeButton /> */}
+            <AppWrapper />
+          </AuthProvider>
+        </PersistGate>
       </Provider>
     </BrowserRouter>
   );

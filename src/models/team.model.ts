@@ -18,3 +18,11 @@ export interface TeamResponse {
   message: string;
   data: Team;
 }
+
+export interface CreateTeamFormData {
+  id: string;
+  name: string;
+  AdminTeamId: string;
+  urlLogo?: string;
+  extensionFile?: string;
+}
