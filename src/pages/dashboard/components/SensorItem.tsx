@@ -1,59 +1,92 @@
-// @/pages/dashboard/components/SensorItem.tsx
 import { useEffect, useState } from "react";
 import { BentoGridItem } from "@/components/ui/bento-grid";
-import { PenTool } from "lucide-react";
 import { SensorItemProps, Sensor } from "@/models/sensor.model";
+import { getSensorsByTeam } from "@/pages/sensor/service/sensor.service";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Link } from "react-router-dom";
+
+const MAX_VISIBLE_SENSORS = 4;
 
 const SensorItem = ({ teamId }: SensorItemProps) => {
-  const [sensors, setSensors] = useState<Sensor[]>([]);
-
-  // console.log("teamId:", teamId);
+  const [sensors, setSensors] = useState<Sensor[] | null>(null);
 
   useEffect(() => {
-    if (!teamId) return;
     const fetchSensors = async () => {
-      const mockSensors: Sensor[] = [
-        { id: "1", name: "Sensor de Temperatura", teamId: teamId },
-        { id: "2", name: "Sensor de Humedad", teamId: teamId },
-        { id: "3", name: "Sensor de Presión", teamId: teamId },
-      ];
-      setSensors(mockSensors);
+      if (!teamId) return;
+      try {
+        const sensorData = await getSensorsByTeam(teamId);
+        setSensors(sensorData);
+      } catch (err) {
+        console.error("Error fetching sensors:", err);
+        setSensors([]);
+      }
     };
 
     fetchSensors();
   }, [teamId]);
 
-  return (
-    <BentoGridItem
-      title="Sensores del equipo"
-      description={
-        !teamId
-          ? "El equipo no tiene sensores"
-          : sensors.length > 0
-          ? sensors.map((sensor) => `• ${sensor.name} (${sensor.description})`).join("\n")
-          : "No hay sensores disponibles"
-      }
-      header={
-        <div className="flex flex-col items-start justify-center min-h-[6rem] rounded-xl bg-neutral-100 dark:bg-black border dark:border-white/[0.2] p-4">
-          <p className="font-bold">📡 Sensores:</p>
-          {!teamId ? (
-            <p className="text-sm text-red-500">El equipo no tiene sensores</p>
-          ) : sensors.length > 0 ? (
-            sensors.map((sensor) => (
-              <p key={sensor.id} className="text-sm">
-                ✅ {sensor.name} ({sensor.description})
-              </p>
-            ))
-          ) : (
-            <p className="text-sm text-neutral-500">No hay sensores</p>
-          )}
-        </div>
-      }
-      className="md:col-span-1"
-      icon={<PenTool className="h-4 w-4 text-neutral-500" />}
-    />
+  const SkeletonLoader = () => (
+    <Card className="w-full min-h-[6rem]">
+      <CardHeader className="text-lg font-bold">📡 Sensores</CardHeader>
+      <CardContent>
+        <Skeleton className="w-full h-4 mb-2" />
+        <Skeleton className="w-3/4 h-4 mb-2" />
+        <Skeleton className="w-2/4 h-4" />
+      </CardContent>
+    </Card>
   );
+
+  const SensorContent = () => {
+    if (!teamId) {
+      return (
+        <Card className="w-full min-h-[6rem]">
+          <CardHeader className="text-lg font-bold">📡 Sensores</CardHeader>
+          <CardContent>
+            <Link to="/sensors" className="text-sm text-red-500 hover:underline">
+              El equipo no tiene sensores
+            </Link>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (!sensors?.length) {
+      return (
+        <div className="w-full min-h-[20rem]">
+          <CardHeader className="text-lg font-bold">📡 Sensores</CardHeader>
+          <CardContent>
+            <Link to="/sensors" className="text-sm text-neutral-500 hover:underline">
+              No hay sensores
+            </Link>
+          </CardContent>
+        </div>
+      );
+    }
+
+    const visibleSensors = sensors.slice(0, MAX_VISIBLE_SENSORS);
+    const remainingCount = sensors.length - MAX_VISIBLE_SENSORS;
+
+    return (
+      <Card className="w-full min-h-[6rem]">
+        <CardHeader className="text-lg font-bold">📡 Sensores</CardHeader>
+        <CardContent>
+          {visibleSensors.map((sensor) => (
+            <p key={sensor.id} className="text-sm">
+              ✅ {sensor.name} ({sensor.description})
+            </p>
+          ))}
+          {remainingCount > 0 && (
+            <Link to="/sensors" className="text-sm text-gray-500 hover:underline">
+              ({remainingCount} más)
+            </Link>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return <BentoGridItem header={sensors === null ? <SkeletonLoader /> : <SensorContent />} className="md:col-span-1" />;
 };
 
 export default SensorItem;
-
