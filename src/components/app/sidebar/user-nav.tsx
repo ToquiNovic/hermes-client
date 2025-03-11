@@ -20,9 +20,12 @@ import { useEffect, useState } from "react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { useUser as useUserDataBase } from "@/hooks";
 import supabase from "@/lib/supabaseClient";
+import { logout } from "@/services";
+import { useDispatch } from "react-redux";
 
 export function UserNav() {
   const [userSupabase, setUserSupabase] = useState<SupabaseUser | null>(null);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -33,6 +36,13 @@ export function UserNav() {
     };
     fetchUser();
   }, []);
+
+  const handleLogout = async () => {
+    const success = await logout(dispatch);
+    if (success) {
+      window.location.href = "/login";
+    }
+  };
 
   const { userData, loading, error } = useUserDataBase(userSupabase?.id || "");
 
@@ -92,7 +102,7 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => alert("Logout")}>
+        <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="w-4 h-4 mr-3 text-muted-foreground" />
           Cerrar Sesión
         </DropdownMenuItem>

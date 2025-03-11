@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Ellipsis } from "lucide-react";
+import { Ellipsis, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getMenuList } from "./utils";
 // import { logout } from "@/redux/states/userSlice";
@@ -12,6 +12,8 @@ import {
   TooltipContent,
   TooltipProvider,
 } from "@/components/ui/tooltip";
+import { logout } from "@/services";
+import { useDispatch } from "react-redux";
 
 interface MenuProps {
   isOpen: boolean | undefined;
@@ -20,6 +22,15 @@ interface MenuProps {
 export function Menu({ isOpen }: MenuProps) {
   const location = useLocation();
   const menuList = getMenuList(location.pathname);
+  const dispatch = useDispatch();
+
+  const handleLogout = async () => {
+    const success = await logout(dispatch);
+    if (success) {
+      window.location.href = "/login"; 
+    }
+  };
+  
   return (
     <ScrollArea className="[&>div>div[style]]:!block">
       <nav className="mt-8 h-full w-full">
@@ -107,7 +118,6 @@ export function Menu({ isOpen }: MenuProps) {
             </li>
           ))}
           <li className="w-full grow flex items-end">
-            {/* <TooltipProvider disableHoverableContent>
               <Tooltip delayDuration={100}>
                 <TooltipTrigger asChild>
                   <Button
@@ -132,7 +142,6 @@ export function Menu({ isOpen }: MenuProps) {
                   <TooltipContent side="right" onClick={handleLogout} >Cerrar Sesión</TooltipContent>
                 )}
               </Tooltip>
-            </TooltipProvider> */}
           </li>
         </ul>
       </nav>
