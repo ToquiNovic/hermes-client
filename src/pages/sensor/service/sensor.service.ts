@@ -55,11 +55,31 @@ export const getSensorData = async (id: string): Promise<SensorData[]> => {
       type: sensordata.type,
       value: sensordata.value,
       createdAt: sensordata.createdAt,
-      teamId: sensordata.teamId,
     }));
   } catch (error) {
     console.error("Error obteniendo los datos del sensor:", error);
     return [];
+  }
+};
+
+export const deleteSensor = async (id: string) => {
+  try {
+    const response = await axios.delete(`/api/sensor/${id}`);
+
+    if (response.data.success) {
+      return response.data;
+    }
+
+    console.warn("Respuesta inesperada al eliminar el sensor:", response.data);
+    throw new Error(response.data.message || "Respuesta inesperada del servidor.");
+  } catch (error: unknown) {
+    console.error("Error al eliminar el sensor:", error);
+
+    if (error instanceof AxiosError && error.response?.data) {
+      throw new Error(error.response.data.message || "Error desconocido del servidor.");
+    }
+
+    throw new Error("Hubo un error al eliminar el sensor.");
   }
 };
 

@@ -14,11 +14,15 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
-import { Trash2, SquareChevronRight, ChartArea  } from "lucide-react";
+import { Trash2, SquareChevronRight, ChartArea } from "lucide-react";
 import { Sensor } from "@/models";
 import { ConectSensorDrawer } from "./ConectSensorDrawer";
 import { getSensorData } from "../service";
 import { SensorData } from "@/models";
+import { DialogGraph } from "@/pages/sensor/components/DialogGraph";
+import { deleteSensor } from "../service/sensor.service";
+import { DeleteSensorDialog } from "./DeleteSensorDialog";
+import { toast } from "sonner";
 
 interface SensorCardProps {
   sensor: Sensor;
@@ -26,19 +30,22 @@ interface SensorCardProps {
   onDelete: (sensor: Sensor) => void;
 }
 
-export const SensorCard: React.FC<SensorCardProps> = ({ sensor, onDelete, token }) => {
+export const SensorCard: React.FC<SensorCardProps> = ({
+  sensor,
+  onDelete,
+  token,
+}) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDialogOpenGraph, setIsDialogOpenGraph] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [sensorData, setSensorData] = useState<SensorData[]>([]);
 
   useEffect(() => {
     const fetchSensorData = async () => {
-      console.log("sensor.id:", sensor.id);
-      
       if (!sensor.id) return;
       try {
-        const sensorData = await getSensorData(sensor.id);
-        console.log("sensorData:", sensorData);
-        setSensorData(sensorData);
+        const data = await getSensorData(sensor.id);
+        setSensorData(data);
       } catch (err) {
         console.error("Error fetching sensor data:", err);
       }
@@ -46,6 +53,21 @@ export const SensorCard: React.FC<SensorCardProps> = ({ sensor, onDelete, token 
 
     fetchSensorData();
   }, [sensor.id]);
+
+  const handleDelete = () => {
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!sensor?.id) return;
+    try {
+      await deleteSensor(sensor.id);
+      toast.success("Sensor eliminado correctamente.");
+      onDelete(sensor);
+    } catch (err) {
+      console.error("Error deleting sensor:", err);
+    }
+  };
 
   return (
     <Card className="shadow-lg rounded-lg relative flex flex-col justify-between h-full">
@@ -62,7 +84,7 @@ export const SensorCard: React.FC<SensorCardProps> = ({ sensor, onDelete, token 
               variant="ghost"
               size="icon"
               className="absolute top-2 right-2 text-red-500 hover:bg-red-100"
-              onClick={() => onDelete(sensor)}
+              onClick={() => handleDelete()}
             >
               <Trash2 className="h-5 w-5" />
             </Button>
@@ -94,31 +116,43 @@ export const SensorCard: React.FC<SensorCardProps> = ({ sensor, onDelete, token 
               size="sm"
               onClick={() => setIsDialogOpen(true)}
             >
-              <SquareChevronRight  className="h-4 w-4" />
+              <SquareChevronRight className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Ver Conexion</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              size="sm"
-              onClick={() => setIsDialogOpen(true)}
-            >
-              <ChartArea   className="h-4 w-4" />
+            <Button size="sm" onClick={() => setIsDialogOpenGraph(true)}>
+              <ChartArea className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>Ver Grafico</TooltipContent>
         </Tooltip>
       </CardFooter>
 
-      {/* Diálogo para agregar campos */}
+      {/* Diálogo para la conexión del sensor */}
       <ConectSensorDrawer
         sensorId={sensor.id}
         teamId={sensor.teamId}
         token={token || ""}
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
+      />
+
+      {/* Usar el componente DialogGraph para mostrar el gráfico */}
+      <DialogGraph
+        isOpen={isDialogOpenGraph}
+        onClose={() => setIsDialogOpenGraph(false)}
+        sensorId={sensor.id}
+      />
+
+      {/* El diálogo de confirmación para eliminar el sensor */}
+      <DeleteSensorDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onDelete={confirmDelete}
+        sensorName={sensor.name}
       />
     </Card>
   );

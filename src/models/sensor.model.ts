@@ -33,9 +33,7 @@ export interface SensorData {
   id: string;
   type: string;
   value: string;
-  token?: string;
   createdAt: string;
-  teamId?: string;
 }
 
 export interface SensorDataAPIResponse {

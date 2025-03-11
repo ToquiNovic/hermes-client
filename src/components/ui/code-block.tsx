@@ -1,8 +1,6 @@
-// @/components/ui/code-block.tsx
 "use client";
 import { useEffect, useState, useMemo } from "react";
 import { getHighlighter } from "shikiji";
-// import { Check, Copy } from "lucide-react";
 
 type CodeBlockProps = {
   language: string;

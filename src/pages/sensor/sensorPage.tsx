@@ -1,4 +1,3 @@
-// @/pages/sensor/sensorPage.tsx
 import { useCallback, useEffect, useState } from "react";
 import { getSensorsByTeam } from "./service";
 import { Sensor, Team } from "@/models";
@@ -53,6 +52,11 @@ export const SensorsPage = () => {
     }
   }, [fetchSensors, userData, loading]);
 
+  // Función para eliminar un sensor
+  const handleDelete = (sensorId: string) => {
+    setSensors((prevSensors) => prevSensors.filter(sensor => sensor.id !== sensorId));
+  };
+
   return (
     <ContentLayout title="Sensores" icon={<UtilityPole />}>
       <div className="w-full p-6">
@@ -82,7 +86,7 @@ export const SensorsPage = () => {
                 key={sensor.id}
                 sensor={sensor}
                 token={team?.token || ""}
-                onDelete={() => {}}
+                onDelete={() => handleDelete(sensor.id)} // Llamamos a handleDelete
               />
             ))
           ) : (

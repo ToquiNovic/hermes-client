@@ -25,7 +25,7 @@ export const ConectSensorDrawer = ({
   token,
   onClose,
 }: ConectSensorDrawerProps) => {
-  const code = codeTemplate(sensorId, teamId, token);  
+  const code = codeTemplate(sensorId, teamId, token);
 
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
@@ -40,14 +40,15 @@ export const ConectSensorDrawer = ({
             </DrawerDescription>
           </DrawerHeader>
 
-          {/* ScrollArea para el bloque de código */}
           <ScrollArea className="flex-1 px-4 pb-4">
+            <div className="rounded-md border bg-gray-100 p-4">
               <CodeBlock
                 language="cpp"
                 filename="SensorCode.ino"
-                highlightLines={[28, 39, 40, 41, 42]}
+                highlightLines={[9, 13, 14, 18]}
                 code={code}
               />
+            </div>
           </ScrollArea>
         </div>
       </DrawerContent>
