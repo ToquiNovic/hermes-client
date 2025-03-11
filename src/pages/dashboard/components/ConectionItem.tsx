@@ -12,7 +12,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner"; // Importamos Sonner
+import { toast } from "sonner";
 
 const ConectionItem = ({ supabaseUser }: UserItemProps) => {
   const { userData, loading, error } = useUser(supabaseUser.id);

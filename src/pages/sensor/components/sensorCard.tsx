@@ -1,3 +1,4 @@
+// @/pages/sensor/components/sensorCard.tsx
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,23 +14,26 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
-import { Trash2, IndentIncrease } from "lucide-react";
+import { Trash2, SquareChevronRight, ChartArea  } from "lucide-react";
 import { Sensor } from "@/models";
-import { ConectSensorDialog } from "./ConectSensorDialog";
+import { ConectSensorDrawer } from "./ConectSensorDrawer";
 import { getSensorData } from "../service";
 import { SensorData } from "@/models";
 
 interface SensorCardProps {
   sensor: Sensor;
+  token: string;
   onDelete: (sensor: Sensor) => void;
 }
 
-export const SensorCard: React.FC<SensorCardProps> = ({ sensor, onDelete }) => {
+export const SensorCard: React.FC<SensorCardProps> = ({ sensor, onDelete, token }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [sensorData, setSensorData] = useState<SensorData[]>([]);
 
   useEffect(() => {
     const fetchSensorData = async () => {
+      console.log("sensor.id:", sensor.id);
+      
       if (!sensor.id) return;
       try {
         const sensorData = await getSensorData(sensor.id);
@@ -86,21 +90,33 @@ export const SensorCard: React.FC<SensorCardProps> = ({ sensor, onDelete }) => {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => setIsDialogOpen(true)}
             >
-              <IndentIncrease className="h-4 w-4" />
+              <SquareChevronRight  className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Campos</TooltipContent>
+          <TooltipContent>Ver Conexion</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="sm"
+              onClick={() => setIsDialogOpen(true)}
+            >
+              <ChartArea   className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Ver Grafico</TooltipContent>
         </Tooltip>
       </CardFooter>
 
       {/* Diálogo para agregar campos */}
-      <ConectSensorDialog
+      <ConectSensorDrawer
         sensorId={sensor.id}
         teamId={sensor.teamId}
+        token={token || ""}
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
       />

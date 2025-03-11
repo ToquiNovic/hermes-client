@@ -6,6 +6,7 @@ export interface Sensor {
   name: string;
   description?: string;
   teamId: string;
+  token?: string;
 }
 
 export interface SensorItemProps {
@@ -32,6 +33,7 @@ export interface SensorData {
   id: string;
   type: string;
   value: string;
+  token?: string;
   createdAt: string;
   teamId?: string;
 }
@@ -40,4 +42,11 @@ export interface SensorDataAPIResponse {
   success: boolean;
   message: string;
   data: SensorData[];
+}
+
+
+export interface CreateSensorFormData {
+  name: string;
+  description?: string;
+  teamId: string;
 }

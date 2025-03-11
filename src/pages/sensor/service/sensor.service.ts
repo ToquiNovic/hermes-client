@@ -1,12 +1,34 @@
 // @/pages/sensor/service/sensor.service.ts
 import axios from "axios";
-import { Sensor, SensorData, SensorAPIResponse, SensorDataAPIResponse } from "@/models";
+import { Sensor, SensorData, SensorAPIResponse, SensorDataAPIResponse, CreateSensorFormData } from "@/models";
+import { AxiosError } from "axios";
 
 interface APIResponse {
   success: boolean;
   message: string;
   data: SensorAPIResponse[];
 }
+
+export const createSensor = async (sensorData: CreateSensorFormData) => {
+  try {
+    const response = await axios.post<APIResponse>(`/api/sensor`, sensorData);
+
+    if (response.data.success) {
+      return response.data;
+    }
+
+    console.warn("Respuesta inesperada al crear el sensor:", response.data);
+    throw new Error(response.data.message || "Respuesta inesperada del servidor.");
+  } catch (error: unknown) {
+    console.error("Error al crear el sensor:", error);
+
+    if (error instanceof AxiosError && error.response?.data) {
+      throw new Error(error.response.data.message || "Error desconocido del servidor.");
+    }
+
+    throw new Error("Hubo un error al crear el sensor.");
+  }
+};
 
 export const getSensorsByTeam = async (id: string): Promise<Sensor[]> => {
   try {

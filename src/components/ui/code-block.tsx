@@ -1,7 +1,8 @@
+// @/components/ui/code-block.tsx
 "use client";
 import { useEffect, useState, useMemo } from "react";
 import { getHighlighter } from "shikiji";
-import { Check, Copy } from "lucide-react";
+// import { Check, Copy } from "lucide-react";
 
 type CodeBlockProps = {
   language: string;
@@ -36,7 +37,9 @@ export const CodeBlock = ({
 
   const tabsExist = tabs.length > 0;
   const activeCode = tabsExist ? tabs[activeTab].code : code ?? "";
-  const activeLanguage = tabsExist ? tabs[activeTab].language || language : language;
+  const activeLanguage = tabsExist
+    ? tabs[activeTab].language || language
+    : language;
 
   const activeHighlightLines = useMemo(
     () => (tabsExist ? tabs[activeTab].highlightLines || [] : highlightLines),
@@ -45,18 +48,27 @@ export const CodeBlock = ({
 
   useEffect(() => {
     const loadHighlighter = async () => {
-      const highlighter = await getHighlighter({ themes: ["github-dark"] });
+      const highlighter = await getHighlighter({
+        themes: ["github-dark"],
+        langs: ["jsx", "cpp"],
+      });
+
       const highlightedHtml = highlighter.codeToHtml(activeCode ?? "", {
         lang: activeLanguage || "plaintext",
         theme: "github-dark",
       });
 
-      // Modificar el HTML generado para resaltar las líneas especificadas
+      // Modificar el HTML generado para agregar numeración de líneas
       const lines = highlightedHtml.split("\n").map((line, index) => {
-        if (activeHighlightLines.includes(index + 1)) {
-          return `<div class="highlight">${line}</div>`;
-        }
-        return `<div>${line}</div>`;
+        const lineNumber = index + 1;
+        const isHighlighted = activeHighlightLines.includes(lineNumber);
+
+        return `
+          <div class="code-line ${isHighlighted ? "highlight" : ""}">
+            <span class="line-number">${lineNumber}</span>
+            <span class="code-content">${line}</span>
+          </div>
+        `;
       });
 
       setHtml(lines.join("\n"));
@@ -83,7 +95,9 @@ export const CodeBlock = ({
                 key={index}
                 onClick={() => setActiveTab(index)}
                 className={`px-3 !py-2 text-xs transition-colors font-sans ${
-                  activeTab === index ? "text-white" : "text-zinc-400 hover:text-zinc-200"
+                  activeTab === index
+                    ? "text-white"
+                    : "text-zinc-400 hover:text-zinc-200"
                 }`}
               >
                 {tab.name}
@@ -94,22 +108,50 @@ export const CodeBlock = ({
         {!tabsExist && filename && (
           <div className="flex justify-between items-center py-2">
             <div className="text-xs text-zinc-400">{filename}</div>
-            <button
-              onClick={copyToClipboard}
-              className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-200 transition-colors font-sans"
-            >
-              {copied ? <Check size={14} /> : <Copy size={14} />}
-            </button>
           </div>
         )}
       </div>
-      <div className="overflow-x-auto" dangerouslySetInnerHTML={{ __html: html }} />
+
+      {/* Icono de copiar en la esquina superior derecha */}
+      <button
+        onClick={copyToClipboard}
+        className="absolute top-4 right-4 text-xs text-zinc-400 hover:text-zinc-200 transition-colors font-sans"
+      >
+        {copied ? <span>✔</span> : <span>📋</span>}
+      </button>
+
+      {/* Contenedor del código con scroll */}
+      <div
+        className="overflow-y-auto max-h-[400px]"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+
       <style>
         {`
+          .code-line {
+            display: flex;
+            align-items: flex-start; /* Alineación superior para mantener las líneas alineadas */
+          }
+
+          .line-number {
+            width: 30px; /* Ancho fijo para los números de línea */
+            text-align: right;
+            margin-right: 10px;
+            color: #888;
+            font-size: 0.9rem;
+            user-select: none; /* Evita que el número sea seleccionable */
+          }
+
+          .code-content {
+            flex-grow: 1;
+            white-space: pre; /* Asegura que los saltos de línea y espacios se mantengan correctamente */
+          }
+
           .highlight {
             background-color: rgba(255, 255, 0, 0.2);
             display: block;
             width: 100%;
+            padding: 0 10px; /* Relleno adicional para las líneas resaltadas, si es necesario */
           }
         `}
       </style>
