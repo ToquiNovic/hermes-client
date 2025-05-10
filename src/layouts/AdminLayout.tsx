@@ -1,7 +1,6 @@
 // @/layouts/AdminLayout.tsx
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "@/components/app/sidebar/sidebar";
-import { Toaster } from "sonner";
 import { useSidebar } from "@/hooks";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +19,6 @@ export default function AdminLayout() {
         )}
       >
         <Outlet />
-        <Toaster position="top-right" richColors />
       </main>
       <footer
         className={cn(

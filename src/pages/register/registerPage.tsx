@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { registerUser, loginWithGoogle } from "./services/register.service.ts";
+import { Link } from "react-router-dom";
+import { registerUser } from "./services/register.service.ts";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import EmailVerification from "./components/EmailVerification";
-import { toast } from "sonner";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -20,40 +21,17 @@ export default function RegisterPage() {
 
     try {
       const user = await registerUser(email, password);
-
-      if (user) {
-        setVerificationSent(true);
-      }
+      if (user) setVerificationSent(true);
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Ocurrió un error inesperado");
-      }
+      setError(
+        err instanceof Error ? err.message : "Ocurrió un error inesperado"
+      );
     }
 
     setLoading(false);
   };
 
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-
-    try {
-      await loginWithGoogle();
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        toast.error("Error al iniciar sesión con Google: " + err.message);
-      } else {
-        toast.error("Ocurrió un error inesperado");
-      }
-    }
-
-    setLoading(false);
-  };
-
-  if (verificationSent) {
-    return <EmailVerification email={email} />;
-  }
+  if (verificationSent) return <EmailVerification email={email} />;
 
   return (
     <Card className="w-96">
@@ -82,19 +60,18 @@ export default function RegisterPage() {
           </Button>
         </form>
 
-        <div className="flex items-center my-4">
-          <hr className="flex-grow border-gray-300" />
-          <span className="mx-2 text-gray-500">o</span>
-          <hr className="flex-grow border-gray-300" />
+        {/* Separador */}
+        <div className="my-4">
+          <Separator />
         </div>
 
-        <Button
-          onClick={handleGoogleLogin}
-          disabled={loading}
-          className="w-full"
-        >
-          {loading ? "Cargando..." : "Continuar con Google"}
-        </Button>
+        {/* Enlace a login */}
+        <p className="text-center text-sm">
+          ¿Ya tienes una cuenta?{" "}
+          <Link to="/login" className="text-primary">
+            Inicia sesión
+          </Link>
+        </p>
       </CardContent>
     </Card>
   );
