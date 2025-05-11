@@ -17,7 +17,7 @@ import { useState, useCallback } from "react";
 
 const Dashboard = () => {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0); // Clave para forzar refetch
+  const [refreshKey, setRefreshKey] = useState(0); 
 
   const user: User | null = useSelector(
     (state: RootState) => state.supabase.user
@@ -25,12 +25,12 @@ const Dashboard = () => {
   const storedTeamId = useSelector(
     (state: RootState) => state.supabase.user?.teamId
   );
-  const { userData, loading, error } = useUser(user?.id || "", refreshKey); // Pasa refreshKey a useUser
+  const { userData, loading, error } = useUser(user?.id || "", refreshKey); 
 
   const teamId = userData?.teamId || storedTeamId || "";
 
   const handleTeamLeave = useCallback(() => {
-    setRefreshKey((prev) => prev + 1); // Incrementa refreshKey para forzar refetch
+    setRefreshKey((prev) => prev + 1);
   }, []);
 
   if (!user || loading) return <div>Cargando...</div>;
@@ -57,7 +57,7 @@ const Dashboard = () => {
               <TeamItem
                 supabaseUser={supabaseUser}
                 isHovered={hoveredItem === "team"}
-                onTeamLeave={handleTeamLeave} // Pasa el callback
+                onTeamLeave={handleTeamLeave}
               />
             </div>
             <SensorItem teamId={teamId} />

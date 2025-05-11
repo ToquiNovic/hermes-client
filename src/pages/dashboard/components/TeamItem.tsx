@@ -127,9 +127,7 @@ const TeamItem = ({ supabaseUser, isHovered, onTeamLeave }: TeamItemProps) => {
         src={teamProfileImage || "/metasync-logo.webp"}
         className="h-full w-full object-cover absolute inset-0 [mask-image:radial-gradient(circle,transparent,black_80%)] pointer-events-none"
         initial={{ opacity: 0, scale: 1 }}
-        animate={
-          isHovered ? { opacity: 0.5, scale: 0.9 } : { opacity: 0, scale: 1 }
-        }
+        animate={{ opacity: 0.5 }}
         transition={{ duration: 1 }}
       />
       <div className="flex flex-row items-center justify-center w-full z-20">
