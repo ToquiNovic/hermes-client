@@ -3,11 +3,11 @@ import { useEffect, useState } from "react";
 import { getUserById } from "@/services";
 import { User } from "@/models";
 
-export const useUser = (userId?: string) => {
+export const useUser = (userId?: string, refreshKey: number = 0) => {
   const [userData, setUserData] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   useEffect(() => {
     if (!userId) return;
 
@@ -31,7 +31,7 @@ export const useUser = (userId?: string) => {
     };
 
     fetchUser();
-  }, [userId]);
+  }, [userId, refreshKey]); // Refetch cuando cambie refreshKey
 
   return { userData, loading, error };
 };

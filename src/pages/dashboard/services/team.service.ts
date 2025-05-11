@@ -45,3 +45,13 @@ export const createTeam = async (teamData: CreateTeamFormData) => {
     throw new Error("Hubo un error al crear el equipo.");
   }
 };
+
+export const leavingaTeam = async (userId: string) => {
+  try {
+    const response = await axios.post(`/api/user/leavingteam/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error al abandonar el equipo:", error);
+    throw new Error("Hubo un error al abandonar el equipo.");
+  }
+};
