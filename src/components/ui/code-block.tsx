@@ -146,7 +146,9 @@ export const CodeBlock = (props: CodeBlockProps) => {
         }
         .code-content {
           flex-grow: 1;
-          white-space: pre;
+          white-space: pre-wrap; /* Permite que el código se divida en nuevas líneas */
+          word-wrap: break-word; /* Rompe palabras largas si es necesario */
+          padding-right: 20px; /* Padding derecho agregado */
         }
         .highlight {
           background-color: rgba(255, 255, 0, 0.15);
