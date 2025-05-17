@@ -1,4 +1,3 @@
-// components/DialogGraphHistory.tsx
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import {
@@ -6,18 +5,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ChartContainer, ChartConfig } from "@/components/ui/chart";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { SensorData } from "@/models";
+import { formatDistanceToNowStrict } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface DialogGraphHistoryProps {
   sensorData: SensorData[];
@@ -37,20 +29,6 @@ export const DialogGraphHistory = ({
       (!dateRange.to || date <= dateRange.to)
     );
   });
-
-  const chartData = filteredData.map((data) => ({
-    timestamp: data.createdAt,
-    value: data.value,
-  }));
-
-  const chartConfig: ChartConfig = {
-    value: {
-      label: "Sensor Value",
-      color: "#2563eb",
-    },
-  };
-
-  const dynamicWidth = Math.max(800, filteredData.length * 20);
 
   return (
     <>
@@ -83,28 +61,34 @@ export const DialogGraphHistory = ({
         </Popover>
       </div>
 
-      <div className="flex-1 p-4 overflow-auto">
+      <div className="p-4 overflow-auto">
         {filteredData.length > 0 ? (
-          <ChartContainer
-            config={chartConfig}
-            className="min-h-[200px] w-full overflow-x-auto"
-          >
-            <div style={{ width: dynamicWidth }}>
-              <AreaChart width={dynamicWidth} height={300} data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="timestamp" />
-                <YAxis />
-                <Tooltip />
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  stroke={chartConfig.value.color}
-                  fill={chartConfig.value.color}
-                  name={typeof chartConfig.value.label === "string" ? chartConfig.value.label : ""}
-                />
-              </AreaChart>
-            </div>
-          </ChartContainer>
+          <div className="overflow-x-auto border rounded-md">
+            <table className="min-w-full table-auto text-sm text-left">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-4 py-2">Fecha</th>
+                  <th className="px-4 py-2">Hace</th>
+                  <th className="px-4 py-2">Valor del sensor</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredData.map((data) => (
+                  <tr key={data.id} className="border-t">
+                    <td className="px-4 py-2">
+                      {format(new Date(data.createdAt), "Pp", { locale: es })}
+                    </td>
+                    <td className="px-4 py-2">
+                      {formatDistanceToNowStrict(new Date(data.createdAt), {
+                        locale: es,
+                      })}
+                    </td>
+                    <td className="px-4 py-2">{data.value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
           <p className="text-center">
             No hay datos disponibles para el rango seleccionado.

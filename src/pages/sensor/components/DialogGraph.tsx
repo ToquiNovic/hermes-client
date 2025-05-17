@@ -152,41 +152,47 @@ export const DialogGraph = ({
             Visualiza los datos del sensor en tiempo real o por historial.
           </DialogDescription>
           <div className="p-2 flex gap-4 items-center">
-            <label htmlFor="limit" className="text-sm font-medium">
-              Mostrar últimos:
-            </label>
-            <Select
-              value={String(maxPoints)}
-              onValueChange={(value: string) => {
-                const parsed = Number(value);
-                if (!isNaN(parsed)) {
-                  setMaxPoints(parsed);
-                }
-              }}
-            >
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Cantidad" />
-              </SelectTrigger>
-              <SelectContent>
-                {[10, 25, 50, 100, 200].map((num) => (
-                  <SelectItem key={num} value={String(num)}>
-                    {num} datos
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              variant={mode === "tiempo-real" ? "default" : "outline"}
-              onClick={() => setMode("tiempo-real")}
-            >
-              Tiempo Real
-            </Button>
-            <Button
-              variant={mode === "historial" ? "default" : "outline"}
-              onClick={() => setMode("historial")}
-            >
-              Historial
-            </Button>
+            <>
+              {mode === "tiempo-real" && (
+                <>
+                  <label htmlFor="limit" className="text-sm font-medium">
+                    Mostrar últimos:
+                  </label>
+                  <Select
+                    value={String(maxPoints)}
+                    onValueChange={(value: string) => {
+                      const parsed = Number(value);
+                      if (!isNaN(parsed)) {
+                        setMaxPoints(parsed);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-[120px]">
+                      <SelectValue placeholder="Cantidad" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[10, 25, 50, 100, 200].map((num) => (
+                        <SelectItem key={num} value={String(num)}>
+                          {num} datos
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </>
+              )}
+              <Button
+                variant={mode === "tiempo-real" ? "default" : "outline"}
+                onClick={() => setMode("tiempo-real")}
+              >
+                Tiempo Real
+              </Button>
+              <Button
+                variant={mode === "historial" ? "default" : "outline"}
+                onClick={() => setMode("historial")}
+              >
+                Historial
+              </Button>
+            </>
           </div>
         </DialogHeader>
 
