@@ -8,61 +8,66 @@ export const InterfaceTemplateCode = (): string => `// hermes.h
 #include <Arduino.h>
 
 bool connectToWiFi(const char* ssid, const char* password);
-String buildJsonPayload(const char* teamId, const char* token, const char* sensorId, bool state);
-bool hermesControl(const char* sensorId, const char* teamId, const char* token, bool state, const char* serverUrl);
+bool hermesControl(const char* sensorId, const char* teamId, const char* token, const char* serverUrl, String value);
 
 #endif
 `;
 
 export const ClassTemplateCode = (): string => `// hermes.cpp
 #include "hermes.h"
-#include <ESP8266WiFi.h>
-#include <WiFiClient.h>
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
 bool connectToWiFi(const char* ssid, const char* password) {
+  WiFi.disconnect(true);
+  delay(1000);
+  WiFi.mode(WIFI_STA);
+  WiFi.setAutoReconnect(true);
+  WiFi.setSleep(false);
+
+  Serial.printf("Conectando a: %s\n", ssid);
   WiFi.begin(ssid, password);
-  Serial.print("Conectando a Wi-Fi...");
 
-  int retries = 0;
-  while (WiFi.status() != WL_CONNECTED && retries < 20) {
-    delay(1000);
+  int maxRetries = 20;
+  for (int retries = 0; retries < maxRetries; retries++) {
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.print("\nConectado! IP: ");
+      Serial.println(WiFi.localIP());
+      return true;
+    }
     Serial.print(".");
-    retries++;
+    delay(500);
   }
 
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("\nConectado a Wi-Fi!");
-    Serial.print("IP Address: ");
-    Serial.println(WiFi.localIP());
-    return true;
-  } else {
-    Serial.println("\nFallo al conectar a Wi-Fi.");
-    return false;
-  }
+  Serial.printf("\nFalló la conexión. Código: %d\n", WiFi.status());
+  return false;
 }
 
-String buildJsonPayload(const char* teamId, const char* token, const char* sensorId, bool state) {
+String buildJsonPayload(const char* teamId, const char* token, const char* sensorId, String value) {
   StaticJsonDocument<512> doc;
   doc["credentials"]["publicKey"] = teamId;
   doc["credentials"]["secretKey"] = token;
   doc["data"]["sensorId"] = sensorId;
-  doc["data"]["state"] = state;
+  doc["data"]["value"] = value;
 
   String jsonPayload;
   serializeJson(doc, jsonPayload);
   return jsonPayload;
 }
 
-bool hermesControl(const char* sensorId, const char* teamId, const char* token, bool state, const char* serverUrl) {
+bool hermesControl(const char* sensorId, const char* teamId, const char* token, const char* serverUrl, String value) {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("Wi-Fi desconectado. Intentando reconectar...");
     return false;
   }
 
   HTTPClient http;
-  WiFiClient client;
+  WiFiClientSecure client;
+
+  // Desactivar la verificación de certificados SSL
+  client.setInsecure();
 
   if (!http.begin(client, serverUrl)) {
     Serial.println("Error al iniciar conexión HTTP");
@@ -70,16 +75,32 @@ bool hermesControl(const char* sensorId, const char* teamId, const char* token, 
   }
 
   http.addHeader("Content-Type", "application/json");
-  String jsonPayload = buildJsonPayload(teamId, token, sensorId, state);
-  Serial.print("Enviando comando: ");
-  Serial.println(jsonPayload);
+  String jsonPayload = buildJsonPayload(teamId, token, sensorId, value);
+  //Serial.print("Enviando comando: ");
+  //Serial.println(jsonPayload);
 
   int httpResponseCode = http.POST(jsonPayload);
 
   if (httpResponseCode > 0) {
     Serial.print("Código de respuesta: ");
     Serial.println(httpResponseCode);
-    Serial.println(http.getString());
+
+    // Obtener la respuesta como String
+    String response = http.getString();
+
+    // Parsear el JSON para extraer el campo "message"
+    StaticJsonDocument<256> doc;
+    DeserializationError error = deserializeJson(doc, response);
+
+    if (!error) {
+      const char* message = doc["message"];
+      Serial.print("Mensaje del servidor: ");
+      Serial.println(message);
+    } else {
+      Serial.print("Error al parsear JSON: ");
+      Serial.println(error.c_str());
+    }
+
     http.end();
     return true;
   } else {
@@ -98,20 +119,49 @@ export const MainTemplateCode = (
 ): string => `// main.ino 
 #include <hermes.h>
 
+#define trig 12
+#define echo 14
+
 const char* ssid = "MiRedWiFi";
 const char* password = "MiClaveSecreta";
-const char* serverUrl = "${URL_BACK}/api/sensor/control";
+const char* serverUrl = "${URL_BACK}/api/sensor/data";
 const char* sensorId = "${sensorId}";
 const char* teamId = "${teamId}";
 const char* token = "${token}";
 
+float distancia;
+
 void setup() {
   Serial.begin(115200);
-  connectToWiFi(ssid, password);
-  hermesControl(sensorId, teamId, token, true, serverUrl);
+
+  // Configurar pines
+  pinMode(trig, OUTPUT);
+  pinMode(echo, INPUT);
+  digitalWrite(trig, LOW);
+
+  // Conectar a WiFi con mÃ¡s intentos
+  bool conectado = connectToWiFi(ssid, password);
 }
 
 void loop() {
-  // lógica del loop
+  distancia = CalcularDistancia();
+  Serial.print("Distancia: ");
+  Serial.print(distancia);
+  Serial.println(" cm");
+  hermesControl(sensorId, teamId, token, serverUrl, String(distancia));
+  delay(5000);
+}
+
+float CalcularDistancia() {
+  digitalWrite(trig, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trig, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trig, LOW);
+
+  unsigned long tiempo = pulseIn(echo, HIGH, 30000);
+  if (tiempo == 0) return -1.0;
+
+  return (tiempo * 0.0343) / 2;
 }
 `;

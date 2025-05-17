@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Trash2, SquareChevronRight, ChartArea } from "lucide-react";
 import { Sensor } from "@/models";
-import { ConectSensorDrawer } from "./ConectSensorDrawer";
+import { ConectSensorDialog } from "./ConectSensorDrawer";
 import { getSensorData } from "../service";
 import { SensorData } from "@/models";
 import { DialogGraph } from "@/pages/sensor/components/DialogGraph";
@@ -132,7 +132,7 @@ export const SensorCard: React.FC<SensorCardProps> = ({
       </CardFooter>
 
       {/* Diálogo para la conexión del sensor */}
-      <ConectSensorDrawer
+      <ConectSensorDialog
         sensorId={sensor.id}
         teamId={sensor.teamId}
         token={token || ""}
