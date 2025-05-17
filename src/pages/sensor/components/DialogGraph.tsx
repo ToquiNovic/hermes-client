@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getSensorData } from "../service";
 import { SensorData } from "@/models";
 import { DateRange } from "react-day-picker";
@@ -29,6 +29,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { formatDistanceToNowStrict, differenceInSeconds } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface DialogGraphProps {
   isOpen: boolean;
@@ -58,7 +60,7 @@ export const DialogGraph = ({
 
     const fetchSensorData = async () => {
       try {
-        const data = await getSensorData(sensorId);
+        const data = await getSensorData(sensorId, maxPoints);
         if (isMounted) {
           setSensorData(data);
           setLoading(false);
@@ -71,25 +73,30 @@ export const DialogGraph = ({
 
     fetchSensorData();
 
-    const interval = setInterval(() => {
-      if (mode === "tiempo-real") {
-        fetchSensorData();
-      }
-    }, 5000);
-
     return () => {
       isMounted = false;
-      clearInterval(interval);
     };
-  }, [isOpen, sensorId, mode]);
+  }, [isOpen, sensorId, maxPoints]);
 
-  // Generar los datos del gráfico
-  const chartData = sensorData.slice(-maxPoints).map((data) => ({
-    timestamp: data.createdAt,
-    value: Math.round(Number(data.value)),
-  }));
+  useEffect(() => {
+    if (!isOpen || mode !== "tiempo-real" || !sensorId) return;
 
-  // Calcular valores mínimo y máximo para eje Y
+    const interval = setInterval(() => {
+      getSensorData(sensorId)
+        .then(setSensorData)
+        .catch((err) => console.error("Error fetching sensor data:", err));
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isOpen, mode, sensorId]);
+
+  const chartData = sensorData
+    .slice(0, maxPoints)
+    .map((data) => ({
+      timestamp: data.createdAt,
+      value: Math.round(Number(data.value)),
+    }));
+
   const maxValue =
     chartData.length > 0
       ? Math.max(...chartData.map((item) => Number(item.value)))
@@ -105,6 +112,36 @@ export const DialogGraph = ({
       color: "#2563eb",
     },
   };
+
+  // Determinar unidad de tiempo más común
+  const xAxisUnitLabel = useMemo(() => {
+    const unitsCount = {
+      segundos: 0,
+      minutos: 0,
+      horas: 0,
+      días: 0,
+    };
+
+    chartData.forEach(({ timestamp }) => {
+      const date = new Date(timestamp);
+      const diffSec = differenceInSeconds(new Date(), date);
+      if (diffSec < 60) {
+        unitsCount["segundos"]++;
+      } else if (diffSec < 3600) {
+        unitsCount["minutos"]++;
+      } else if (diffSec < 86400) {
+        unitsCount["horas"]++;
+      } else {
+        unitsCount["días"]++;
+      }
+    });
+
+    const mostCommonUnit = Object.entries(unitsCount).reduce((a, b) =>
+      a[1] > b[1] ? a : b
+    )[0];
+
+    return `(${mostCommonUnit} atrás)`;
+  }, [chartData]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -167,18 +204,17 @@ export const DialogGraph = ({
                   <XAxis
                     dataKey="timestamp"
                     tickFormatter={(value) =>
-                      Math.floor(
-                        (Date.now() - new Date(value).getTime()) / 1000
-                      ).toString()
+                      formatDistanceToNowStrict(new Date(value), {
+                        locale: es,
+                      })
                     }
                   >
                     <Label
-                      value="Milisegundos atrás"
+                      value={xAxisUnitLabel}
                       offset={-2}
                       position="insideBottom"
                     />
                   </XAxis>
-
                   <YAxis
                     domain={[
                       Math.min(0, minValue - 5),
@@ -192,8 +228,17 @@ export const DialogGraph = ({
                       style={{ textAnchor: "middle" }}
                     />
                   </YAxis>
-
-                  <Tooltip />
+                  <Tooltip
+                    labelFormatter={(label) =>
+                      `Hace ${formatDistanceToNowStrict(new Date(label), {
+                        locale: es,
+                      })}`
+                    }
+                    formatter={(value: number | string) => [
+                      `${value}`,
+                      "Valor",
+                    ]}
+                  />
                   <Area
                     type="monotone"
                     dataKey="value"

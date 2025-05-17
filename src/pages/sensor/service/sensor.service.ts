@@ -1,6 +1,12 @@
 // @/pages/sensor/service/sensor.service.ts
 import axios from "axios";
-import { Sensor, SensorData, SensorAPIResponse, SensorDataAPIResponse, CreateSensorFormData } from "@/models";
+import {
+  Sensor,
+  SensorData,
+  SensorAPIResponse,
+  SensorDataAPIResponse,
+  CreateSensorFormData,
+} from "@/models";
 import { AxiosError } from "axios";
 
 interface APIResponse {
@@ -18,12 +24,16 @@ export const createSensor = async (sensorData: CreateSensorFormData) => {
     }
 
     console.warn("Respuesta inesperada al crear el sensor:", response.data);
-    throw new Error(response.data.message || "Respuesta inesperada del servidor.");
+    throw new Error(
+      response.data.message || "Respuesta inesperada del servidor."
+    );
   } catch (error: unknown) {
     console.error("Error al crear el sensor:", error);
 
     if (error instanceof AxiosError && error.response?.data) {
-      throw new Error(error.response.data.message || "Error desconocido del servidor.");
+      throw new Error(
+        error.response.data.message || "Error desconocido del servidor."
+      );
     }
 
     throw new Error("Hubo un error al crear el sensor.");
@@ -46,9 +56,15 @@ export const getSensorsByTeam = async (id: string): Promise<Sensor[]> => {
   }
 };
 
-export const getSensorData = async (id: string): Promise<SensorData[]> => {
+export const getSensorData = async (
+  id: string,
+  limit?: number
+): Promise<SensorData[]> => {
   try {
-    const response = await axios.get<SensorDataAPIResponse>(`/api/sensor/data/${id}`);
+    const query = limit ? `?limit=${limit}` : "";
+    const response = await axios.get<SensorDataAPIResponse>(
+      `/api/sensor/data/${id}${query}`
+    );
 
     return response.data.data.map((sensordata) => ({
       id: sensordata.id,
@@ -71,15 +87,18 @@ export const deleteSensor = async (id: string) => {
     }
 
     console.warn("Respuesta inesperada al eliminar el sensor:", response.data);
-    throw new Error(response.data.message || "Respuesta inesperada del servidor.");
+    throw new Error(
+      response.data.message || "Respuesta inesperada del servidor."
+    );
   } catch (error: unknown) {
     console.error("Error al eliminar el sensor:", error);
 
     if (error instanceof AxiosError && error.response?.data) {
-      throw new Error(error.response.data.message || "Error desconocido del servidor.");
+      throw new Error(
+        error.response.data.message || "Error desconocido del servidor."
+      );
     }
 
     throw new Error("Hubo un error al eliminar el sensor.");
   }
 };
-
