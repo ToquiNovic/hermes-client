@@ -52,7 +52,7 @@ export function getMenuList(pathname: string): Group[] {
           href: "/sensors-panel",
           icon: Layers2,
           submenus: [],
-          admin: false,
+          admin: true,
         },
         {
           label: "Sensores",
