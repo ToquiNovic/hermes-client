@@ -13,7 +13,6 @@ import {
   UsersPage,
   RolesPage,
   TeamsPage,
-  AccountPage,
   SensorsPage,
   SensorsPanel,
 } from "@/pages";
@@ -68,7 +67,7 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route element={<AdminPanelLayout />}>
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/account" element={<AccountPage />} />
+                <Route path="/account" element={<CompleteProfile />} />
                 <Route path="/sensors" element={<SensorsPage />} />
                 <Route path="/sensors-panel" element={<SensorsPanel />} />
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   getUser,
   getUserProfileImage,
@@ -29,11 +29,20 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { ContentLayout } from "@/components/app/sidebar/content-layout";
+import { CircleUser } from "lucide-react";
 
 // Esquema de validación con Zod
 const formSchema = z.object({
   fullName: z.string().min(1, "El nombre es obligatorio"),
 });
+
+// Función para obtener el título basado en la ruta
+const getPageTitle = (pathname: string): string => {
+  if (pathname === "/complete-profile") return "Completa tu Perfil";
+  if (pathname === "/account") return "Actualiza tu Cuenta";
+  return "Mi Perfil";
+};
 
 export default function CompleteProfile() {
   const [user, setUser] = useState<User | null>(null);
@@ -42,6 +51,7 @@ export default function CompleteProfile() {
   const [loading, setLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -76,7 +86,10 @@ export default function CompleteProfile() {
     const currentFullName = user?.user_metadata?.full_name || "";
     const currentAvatarUrl = user?.user_metadata?.avatar_url || "";
 
-    if (values.fullName.trim() === currentFullName.trim() && avatarUrl === currentAvatarUrl) {
+    if (
+      values.fullName.trim() === currentFullName.trim() &&
+      avatarUrl === currentAvatarUrl
+    ) {
       return toast.info("No hay cambios para guardar.");
     }
 
@@ -111,53 +124,77 @@ export default function CompleteProfile() {
     }
   };
 
+  // Contenido del formulario
+  const formContent = (
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(handleSaveProfile)}
+        className="space-y-4"
+      >
+        <ProfileImage
+          avatarUrl={avatarUrl}
+          tipo="users"
+          id={userId || ""}
+          onFileChange={handleFileChange}
+        />
+
+        <FormField
+          control={form.control}
+          name="fullName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nombre</FormLabel>
+              <FormControl>
+                <Input placeholder="Ej: Pepe" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div>
+          <FormLabel>Correo Electrónico</FormLabel>
+          <Input
+            type="email"
+            value={user?.email || ""}
+            disabled
+            className="opacity-50"
+          />
+        </div>
+
+        <CardFooter className="flex justify-between mt-4">
+          <Button
+            type="submit"
+            disabled={loading || isUploading}
+            className="w-full"
+          >
+            {loading || isUploading ? "Guardando..." : "Guardar"}
+          </Button>
+        </CardFooter>
+      </form>
+    </Form>
+  );
+
+  // Renderizado condicional basado en la ruta
+  if (location.pathname === "/account") {
+    return (
+      <ContentLayout title="Mi Perfil" icon={<CircleUser />}>
+        <Card className="w-96 mx-auto mt-10">
+          <CardHeader>
+            <CardTitle>{getPageTitle(location.pathname)}</CardTitle>
+          </CardHeader>
+          <CardContent>{formContent}</CardContent>
+        </Card>
+      </ContentLayout>
+    );
+  }
+
   return (
     <Card className="w-96 mx-auto mt-10">
       <CardHeader>
-        <CardTitle>Completa tu Perfil</CardTitle>
+        <CardTitle>{getPageTitle(location.pathname)}</CardTitle>
       </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSaveProfile)} className="space-y-4">
-            <ProfileImage
-              avatarUrl={avatarUrl}
-              tipo="users"
-              id={userId || ""}
-              onFileChange={handleFileChange}
-            />
-
-            <FormField
-              control={form.control}
-              name="fullName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nombre</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ej: Pepe" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div>
-              <FormLabel>Correo Electrónico</FormLabel>
-              <Input
-                type="email"
-                value={user?.email || ""}
-                disabled
-                className="opacity-50"
-              />
-            </div>
-
-            <CardFooter className="flex justify-between mt-4">
-              <Button type="submit" disabled={loading || isUploading} className="w-full">
-                {loading || isUploading ? "Guardando..." : "Guardar"}
-              </Button>
-            </CardFooter>
-          </form>
-        </Form>
-      </CardContent>
+      <CardContent>{formContent}</CardContent>
     </Card>
   );
 }
