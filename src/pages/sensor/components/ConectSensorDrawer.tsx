@@ -13,6 +13,7 @@ import {
   InterfaceTemplateCode,
   ClassTemplateCode,
   MainTemplateCode,
+  JavaScriptTemplateCode,
 } from "@/pages/sensor/utils/codeTemplate";
 import { Button } from "@/components/ui/button";
 import { Copy, Check } from "lucide-react";
@@ -36,6 +37,7 @@ export const ConectSensorDialog = ({
   const InterfaceTemplate = InterfaceTemplateCode();
   const ClassTemplate = ClassTemplateCode();
   const MainTemplate = MainTemplateCode(sensorId, teamId, token);
+  const JavaScriptTemplate = JavaScriptTemplateCode(sensorId);
 
   const codeTabs = [
     {
@@ -53,6 +55,12 @@ export const ConectSensorDialog = ({
       code: MainTemplate,
       language: "cpp",
       highlightLines: [7, 8, 9, 10, 11, 12],
+    },
+    {
+      name: "fetchSensorData.js",
+      code: JavaScriptTemplate,
+      language: "javascript",
+      highlightLines: [8],
     },
   ];
 

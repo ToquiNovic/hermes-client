@@ -27,13 +27,13 @@ bool connectToWiFi(const char* ssid, const char* password) {
   WiFi.setAutoReconnect(true);
   WiFi.setSleep(false);
 
-  Serial.printf("Conectando a: %s\n", ssid);
+  Serial.printf("Conectando a: ", ssid);
   WiFi.begin(ssid, password);
 
   int maxRetries = 20;
   for (int retries = 0; retries < maxRetries; retries++) {
     if (WiFi.status() == WL_CONNECTED) {
-      Serial.print("\nConectado! IP: ");
+      Serial.print("Conectado! IP: ");
       Serial.println(WiFi.localIP());
       return true;
     }
@@ -41,7 +41,7 @@ bool connectToWiFi(const char* ssid, const char* password) {
     delay(500);
   }
 
-  Serial.printf("\nFalló la conexión. Código: %d\n", WiFi.status());
+  Serial.printf("Falló la conexión. Código: %d", WiFi.status());
   return false;
 }
 
@@ -164,4 +164,80 @@ float CalcularDistancia() {
 
   return (tiempo * 0.0343) / 2;
 }
+`;
+
+export const JavaScriptTemplateCode = (sensorId: string): string => `// Ejemplo de cómo obtener datos de un sensor usando fetch en JavaScript
+// Función para obtener datos del sensor
+async function fetchSensorData(sensorId, options = {}) {
+  try {
+    // Construir la URL con parámetros
+    const baseUrl = "${URL_BACK}/api/sensor/data/${sensorId}";
+    const queryParams = new URLSearchParams();
+
+    // Agregar parámetros opcionales si existen
+    if (options.limit) queryParams.append("limit", options.limit);
+    if (options.startDate) queryParams.append("startDate", options.startDate);
+    if (options.endDate) queryParams.append("endDate", options.endDate);
+
+    const url = \`${URL_BACK}?\${queryParams.toString()}\`;
+
+    // Hacer la solicitud GET
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        // Ejemplo de autenticación (descomentar si es necesario):
+        // "Authorization": "Bearer tu-token-aqui"
+      },
+    });
+
+    // Verificar si la respuesta es exitosa
+    if (!response.ok) {
+      throw new Error(\`Error HTTP: \${response.status} \${response.statusText}\`);
+    }
+
+    // Parsear la respuesta JSON
+    const result = await response.json();
+
+    // Verificar si la solicitud fue exitosa
+    if (!result.success) {
+      throw new Error(result.message || "Error al obtener los datos del sensor");
+    }
+
+    // Retornar los datos
+    return result.data;
+  } catch (error) {
+    console.error("Error al obtener datos del sensor:", error.message);
+    throw error;
+  }
+}
+
+// Ejemplo de uso
+async function main() {
+  try {
+    // Parámetros de ejemplo
+    const sensorId = "${sensorId}";
+    const options = {
+      limit: 10, // Límite de 10 registros
+      startDate: "2025-05-01", // Fecha de inicio (formato YYYY-MM-DD)
+      endDate: "2025-05-17", // Fecha de fin (formato YYYY-MM-DD)
+    };
+
+    // Llamar a la función
+    const sensorData = await fetchSensorData(sensorId, options);
+
+    // Mostrar los datos en consola
+    console.log("Datos del sensor:", sensorData);
+
+    // Procesar los datos (ej. mostrar en una tabla o gráfica)
+    sensorData.forEach((data) => {
+      console.log(\`Fecha: \${data.createdAt}, Valor: \${data.value}\`);
+    });
+  } catch (error) {
+    console.error("Error en la ejecución:", error.message);
+  }
+}
+
+// Ejecutar el ejemplo
+main();
 `;
