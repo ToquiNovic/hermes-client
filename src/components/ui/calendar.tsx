@@ -3,7 +3,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import React, { ForwardedRef } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -22,11 +22,12 @@ const CustomInput = React.forwardRef<
 >(({ value, onClick }, ref: ForwardedRef<HTMLButtonElement>) => (
   <Button
     variant="outline"
-    className="w-full max-w-xs justify-start text-left font-normal mx-auto block"
+    className="w-full max-w-xs justify-between items-center text-left font-normal mx-auto flex"
     onClick={onClick}
     ref={ref}
   >
-    {value || "Seleccionar rango de fechas"}
+    <span className="text-sm text-gray-500">{value || "Seleccionar rango de fechas"}</span>
+    <Calendar className="h-4 w-4" />
   </Button>
 ));
 

@@ -265,10 +265,12 @@ export const DialogGraph = ({
         ) : (
           <div className="flex-1 overflow-auto">
             <DialogGraphHistory
-              sensorData={sensorData}
-              dateRange={dateRange}
+              sensorId={sensorId}
+              dateRange={[dateRange.from ?? null, dateRange.to ?? null]}
               onDateChange={(range) => {
-                if (range) setDateRange(range);
+                if (range) {
+                  setDateRange({ from: range[0] ?? undefined, to: range[1] ?? undefined });
+                }
               }}
             />
           </div>

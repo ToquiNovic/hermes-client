@@ -58,12 +58,21 @@ export const getSensorsByTeam = async (id: string): Promise<Sensor[]> => {
 
 export const getSensorData = async (
   id: string,
-  limit?: number
+  limit?: number,
+  startDate?: string,
+  endDate?: string
 ): Promise<SensorData[]> => {
   try {
-    const query = limit ? `?limit=${limit}` : "";
+    const params = new URLSearchParams();
+
+    if (limit) params.append("limit", limit.toString());
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+
     const response = await axios.get<SensorDataAPIResponse>(
-      `/api/sensor/data/${id}${query}`
+      `/api/sensor/data/${id}${queryString}`
     );
 
     return response.data.data.map((sensordata) => ({
