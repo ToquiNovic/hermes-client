@@ -1,20 +1,14 @@
-import { Calendar } from "@/components/ui/calendar";
-import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { format } from "date-fns";
-import { DateRange } from "react-day-picker";
+// src/pages/sensor/components/DialogGraphHistory.tsx
+import { CustomDatePicker } from "@/components/ui/calendar";
 import { SensorData } from "@/models";
-import { formatDistanceToNowStrict } from "date-fns";
+import { format, formatDistanceToNowStrict } from "date-fns";
 import { es } from "date-fns/locale";
+import { useState } from "react";
 
 interface DialogGraphHistoryProps {
   sensorData: SensorData[];
-  dateRange: DateRange;
-  onDateChange: (range: DateRange | undefined) => void;
+  dateRange: [Date | null, Date | null];
+  onDateChange: (range: [Date | null, Date | null]) => void;
 }
 
 export const DialogGraphHistory = ({
@@ -22,43 +16,28 @@ export const DialogGraphHistory = ({
   dateRange,
   onDateChange,
 }: DialogGraphHistoryProps) => {
+  const [localDateRange, setLocalDateRange] =
+    useState<[Date | null, Date | null]>(dateRange);
+
   const filteredData = sensorData.filter((data) => {
+    if (!localDateRange[0] || !localDateRange[1]) return true;
+
     const date = new Date(data.createdAt);
-    return (
-      (!dateRange.from || date >= dateRange.from) &&
-      (!dateRange.to || date <= dateRange.to)
-    );
+    return date >= localDateRange[0] && date <= localDateRange[1];
   });
+
+  const handleDateChange = (dates: [Date | null, Date | null]) => {
+    setLocalDateRange(dates);
+    onDateChange(dates);
+  };
 
   return (
     <>
       <div className="px-4 pt-4">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="w-full max-w-xs">
-              {dateRange.from ? (
-                dateRange.to ? (
-                  <>
-                    {format(dateRange.from, "PPP")} -{" "}
-                    {format(dateRange.to, "PPP")}
-                  </>
-                ) : (
-                  format(dateRange.from, "PPP")
-                )
-              ) : (
-                "Seleccionar rango de fechas"
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0">
-            <Calendar
-              mode="range"
-              selected={dateRange}
-              onSelect={onDateChange}
-              numberOfMonths={2}
-            />
-          </PopoverContent>
-        </Popover>
+        <CustomDatePicker 
+          dateRange={localDateRange}
+          onDateChange={handleDateChange}
+        />
       </div>
 
       <div className="p-4 overflow-auto">
@@ -81,6 +60,7 @@ export const DialogGraphHistory = ({
                     <td className="px-4 py-2">
                       {formatDistanceToNowStrict(new Date(data.createdAt), {
                         locale: es,
+                        addSuffix: true,
                       })}
                     </td>
                     <td className="px-4 py-2">{data.value}</td>
