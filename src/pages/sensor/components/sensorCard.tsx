@@ -23,6 +23,8 @@ import { DialogGraph } from "@/pages/sensor/components/DialogGraph";
 import { deleteSensor } from "../service/sensor.service";
 import { DeleteSensorDialog } from "./DeleteSensorDialog";
 import { toast } from "sonner";
+import { format, parseISO } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface SensorCardProps {
   sensor: Sensor;
@@ -98,7 +100,13 @@ export const SensorCard: React.FC<SensorCardProps> = ({
             key={sensorData[0].id}
             className="flex justify-between items-center border-b py-1"
           >
-            <span className="font-semibold">{sensorData[0].type}:</span>
+            <span className="font-semibold">
+              {sensorData.length > 0
+                ? format(parseISO(sensorData[0].createdAt), "PPP, HH:mm", {
+                    locale: es,
+                  })
+                : "Sin datos"}
+            </span>
             <span>{sensorData[0].value}</span>
           </div>
         ) : (
